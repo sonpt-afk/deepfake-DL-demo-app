@@ -4,7 +4,7 @@ from flask import Flask, render_template, request, redirect, url_for, abort, \
     send_from_directory
 from werkzeug.utils import secure_filename
 from flask_cors import CORS, cross_origin
-from detection import *
+from detect import *
 import uuid
 
 app = Flask(__name__)
@@ -16,7 +16,7 @@ app.config['UPLOAD_PATH'] = './uploads'
 
 
 def validate_image(stream):
-    header = stream.read(512) 
+    header = stream.read(512)  # 512 bytes should be enough for a header check
     stream.seek(0)  # reset stream pointer
     format = imghdr.what(None, header)
     if not format:
