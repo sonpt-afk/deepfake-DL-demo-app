@@ -169,7 +169,7 @@
                 html +=
                   '<img src="' +
                   json.face_list[i] +
-                  '" "/>';
+                  '" style="width: 80px; margin: 10px;"/>';
                 html += "</div>";
                 html += '<div class="col-lg-9" style="margin: auto;">';
                 html += "</div>";
@@ -186,7 +186,7 @@
         uploader.use(
           new window.uppload_Local({
             mimeTypes: ["image/png", "image/jpeg", "image/jpg"],
-            maxFileSize: 15000000,
+            maxFileSize: 5000000,
           })
         );
 
