@@ -11,13 +11,13 @@ app = Flask(__name__)
 cors = CORS(app)
 app.config['CORS_HEADERS'] = 'Content-Type'
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
-app.config['UPLOAD_EXTENSIONS'] = ['.jpg', '.png']
+app.config['UPLOAD_EXTENSIONS'] = ['.jpg', '.png','.jpeg']
 app.config['UPLOAD_PATH'] = './uploads'
 
 
 def validate_image(stream):
-    header = stream.read(512)  # 512 bytes should be enough for a header check
-    stream.seek(0)  # reset stream pointer
+    header = stream.read(512) 
+    stream.seek(0)  
     format = imghdr.what(None, header)
     if not format:
         return None
