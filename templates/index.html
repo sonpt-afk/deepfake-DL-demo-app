@@ -109,7 +109,7 @@
              
             </p>
             <div id="result-div" style="display: none; margin-top: 20px">
-              <label>Prediction Result:</label>
+              <label>Kết quả dự đoán</label>
               <textarea class="form-control" rows="2" id="output"></textarea>
             </div>
           </div>
@@ -162,7 +162,7 @@
               document.getElementById("image-output").src = json.img_url;
 
               var html =
-                '<span class="label label-info" style="margin-left: 10px; font-weight: bolder;">Prediction Results</span>';
+                '<span class="label label-info" style="margin-left: 10px; font-weight: bolder;">Kết quả dự đoán</span>';
               for (var i = 0; i < json.num_faces; i++) {
                 html += '<div class="row">';
                 html += '<div class="col-lg-3">';
