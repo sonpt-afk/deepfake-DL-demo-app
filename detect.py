@@ -4,6 +4,7 @@ import numpy as np
 import pickle
 import cv2
 from tensorflow.keras.applications import DenseNet121
+import tensorflow as tf
 
 def detect(imgpath, outname):
 	thresh = 0.5
@@ -11,7 +12,7 @@ def detect(imgpath, outname):
 	network = cv2.dnn.readNetFromCaffe('./DNN_face_detector/deploy.prototxt',
 	                               './DNN_face_detector/res10_300x300_ssd_iter_140000.caffemodel')
 	# Load mô hình đã đào tạo trên Google Colab
-	model = load_model('./DF-DenseNet121.h5')
+	model = tf.keras.models.load_model('fakevsreal_weights.keras')
 	# Load nhãn đã được mã hoá (Label Encoder)
 	le = pickle.loads(open('./le.pickle', "rb").read())
 
