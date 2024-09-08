@@ -13,13 +13,23 @@ body {
   color: #585a61;
 }
 
+.container {
+  display: flex;
+}
+
+.row {
+  width: 70%;
+}
+.wait-items {
+  display: none;
+}
+
+#image-output {
+  width: 60%;
+  margin: auto;
+}
+
 #output {
-  font-size: 10px;
-  width: 40px;
-  height: 40px;
-  border: 1px solid #000;
-  background-color: #fff;
-  color: #000;
 }
 a {
   color: #5777ba;

@@ -78,12 +78,9 @@
     <section id="hero" class="d-flex align-items-center">
       <div class="container">
         <div class="row">
-          <div
-            class="col-lg-6 d-lg-flex flex-lg-column justify-content-center align-items-stretch pt-5 pt-lg-0 order-2 order-lg-1 aos-init aos-animate"
-            data-aos="fade-up"
-          >
+          
             <div>
-              <h1>Sensity - Hệ thống phát hiện DeepFake dựa trên <br>
+              <h1>Sensity - Hệ thống phát hiện DeepFake dựa trên 
                 Deep Learning</h1>
               <h2>Vui lòng tải ảnh lên để hệ thống kiểm tra
               </h2>
@@ -91,22 +88,20 @@
                 <p><input type="file" name="file" id="file-input" /></p>
                 <p><input type="submit" value="Upload" /></p>
               </form>
-              <div id="loading-spinner" class="spinner-border text-primary" role="status" style="display: none;">
-                <span class="visually-hidden">Loading...</span>
-              </div>
+              <div id="loading-spinner"  class="spinner-border wait-items text-primary" role="status" >
+            </div>
+
+              <span role="status" id="loading-text" class="wait-items">Đang phân tích ảnh của bạn, vui lòng chờ nhé !</span>
+            </div>
             </div>
           </div>
           <div
-            class="col-lg-6 d-lg-flex flex-lg-column align-items-stretch order-1 order-lg-2 hero-img aos-init aos-animate"
-            data-aos="fade-up"
-            style="padding-left: 20px"
+            class="banner-img"
           >
             <img
               src="assets/img/mainpage.jpg"
-              class="img-fluid"
               alt=""
               id="image-output"
-              style="width: fit-content; margin: auto"
             />
             <p
               id="image-credits"
@@ -116,7 +111,8 @@
             </p>
             <div id="result-div" style="display: none; margin-top: 20px">
               <label>Kết quả dự đoán</label>
-              <textarea class="form-control" rows="2" id="output"></textarea>
+              <h1 id="output"></h1>
+
             </div>
           </div>
         </div>
@@ -150,6 +146,7 @@
           // Show the spinner
 
           document.getElementById('loading-spinner').style.display = 'block';
+          document.getElementById('loading-text').style.display = 'block';
       
           fetch('/', {
             method: 'POST',
@@ -161,7 +158,14 @@
             if (data.file_url) {
               console.log('success');
               document.getElementById('image-output').src = data.file_url; // Update the src attribute
-              document.getElementById('output').value = data.label;
+              if(data.label=="Real")
+              {
+                document.getElementById('output').textContent = "Ảnh thật";
+              }
+              else
+              {
+                document.getElementById('output').textContent = "Ảnh fake";
+              }
               document.getElementById('result-div').style.display = 'block';
             } else {
               alert('File upload failed');
@@ -174,6 +178,7 @@
           .finally(() => {
             // Hide the spinner
             document.getElementById('loading-spinner').style.display = 'none';
+            document.getElementById('loading-text').style.display = 'none';
           });
         });
       </script>
