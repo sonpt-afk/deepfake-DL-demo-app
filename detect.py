@@ -56,9 +56,7 @@ def detect(imgpath, outname):
                 label = le.classes_[j]
                 print("Label is: " + str(label))
                 result_text = f"Result: {label}"
-            except Exception as e:
-                print(f"Error predicting face: {e}")
-                continue
+               
 
     return {"label": label}
 

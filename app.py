@@ -14,13 +14,7 @@ app.config['UPLOAD_EXTENSIONS'] = ['.jpg', '.png', '.jpeg']
 app.config['UPLOAD_PATH'] = './uploads'
 app.secret_key = 'supersecretkey'
 
-def validate_image(stream):
-    header = stream.read(512)
-    stream.seek(0)
-    format = imghdr.what(None, header)
-    if not format:
-        return None
-    return '.' + (format if format != 'jpeg' else 'jpg')
+
 
 @app.route('/')
 @cross_origin()
@@ -34,7 +28,7 @@ def upload_image():
     filename = secure_filename(uploaded_file.filename)
     if filename != '':
         file_ext = os.path.splitext(filename)[1]
-        if file_ext not in app.config['UPLOAD_EXTENSIONS'] or file_ext != validate_image(uploaded_file.stream):
+        if file_ext not in app.config['UPLOAD_EXTENSIONS'] :
             abort(400)
         file_path = os.path.join(app.config['UPLOAD_PATH'], filename)
         uploaded_file.save(file_path)
