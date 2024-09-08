@@ -39,7 +39,7 @@ def detect(imgpath, outname):
                 print("Failed to extract face region")
                 continue
             try:
-                face = cv2.resize(face, (128, 128))
+                face = cv2.resize(face, (224, 224))
             except Exception as e:
                 print(f"Error resizing face: {e}")
                 continue
