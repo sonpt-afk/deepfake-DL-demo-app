@@ -25,7 +25,7 @@ def upload_image():
     filename = secure_filename(uploaded_file.filename)
     if filename != '':
         file_ext = os.path.splitext(filename)[1]
-        if file_ext not in app.config['UPLOAD_EXTENSIONS'] or file_ext != validate_image(uploaded_file):
+        if file_ext not in app.config['UPLOAD_EXTENSIONS'] :
             abort(400)
         file_path = os.path.join(app.config['UPLOAD_PATH'], filename)
         uploaded_file.save(file_path)
