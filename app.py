@@ -38,7 +38,7 @@ def upload_image():
 
 @app.errorhandler(413)
 def request_entity_too_large(error):
-    return jsonify({'Kích thước file quá lớn, vui lòng upload file khác'})
+    return jsonify({'message': 'Kích thước file quá lớn, vui lòng upload file khác'}), 413
 
 
 @app.route('/uploads/<filename>')

@@ -174,10 +174,9 @@
             }
           })
           .catch(error => {
-            console.error('Error:', error);
-            document.getElementById('errorMessage').textContent = error.message;
-            var errorModal = new bootstrap.Modal(document.getElementById('errorModal'));
-            errorModal.show();
+            
+            alert(error)
+            
           })
           .finally(() => {
             // Hide the spinner
