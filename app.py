@@ -12,9 +12,6 @@ CORS(app)  # Enable CORS for all routes
 app.config['MAX_CONTENT_LENGTH'] = 5 * 1024 * 1024
 app.config['UPLOAD_EXTENSIONS'] = ['.jpg', '.png', '.jpeg']
 app.config['UPLOAD_PATH'] = './uploads'
-app.secret_key = 'supersecretkey'
-
-
 
 @app.route('/')
 @cross_origin()
@@ -28,20 +25,21 @@ def upload_image():
     filename = secure_filename(uploaded_file.filename)
     if filename != '':
         file_ext = os.path.splitext(filename)[1]
-        if file_ext not in app.config['UPLOAD_EXTENSIONS'] :
+        if file_ext not in app.config['UPLOAD_EXTENSIONS'] or file_ext != validate_image(uploaded_file):
             abort(400)
         file_path = os.path.join(app.config['UPLOAD_PATH'], filename)
         uploaded_file.save(file_path)
         
         # Call the detect function and get the result
-        result = detect(file_path, filename)
+        result = detect(file_path)
         
         return jsonify({'file_url': url_for('upload', filename=filename, _external=True), 'label': result['label']})
     return jsonify({'error': 'No file uploaded'}), 400
 
 @app.errorhandler(413)
 def request_entity_too_large(error):
-    return 'File Too Large', 413
+    return jsonify({'Kích thước file quá lớn, vui lòng upload file khác'})
+
 
 @app.route('/uploads/<filename>')
 @cross_origin()

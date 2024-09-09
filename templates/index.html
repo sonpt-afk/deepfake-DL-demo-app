@@ -5,9 +5,6 @@
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
     <title>Sensity: Deepfake Detection</title>
 
-    <!-- Favicons -->
-    <link href="assets/img/favicon.png" rel="icon" />
-    <link href="assets/img/apple-touch-icon.png" rel="apple-touch-icon" />
 
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -85,7 +82,7 @@
               <h2>Vui lòng tải ảnh lên để hệ thống kiểm tra
               </h2>
               <form id="upload-form" enctype="multipart/form-data">
-                <p><input type="file" name="file" id="file-input" /></p>
+                <p><input type="file" name="file" id="file-input"  accept=".jpg, .jpeg, .png"/></p>
                 <p><input type="submit" value="Upload" /></p>
               </form>
               <div id="loading-spinner"  class="spinner-border wait-items text-primary" role="status" >
@@ -144,7 +141,6 @@
           formData.append('file', fileInput.files[0]);
       
           // Show the spinner
-
           document.getElementById('loading-spinner').style.display = 'block';
           document.getElementById('loading-text').style.display = 'block';
       
@@ -152,18 +148,24 @@
             method: 'POST',
             body: formData
           })
-          .then(response => response.json())
+          .then(response => {
+            if (!response.ok) {
+              if (response.status === 413) {
+                throw new Error('Kích thước file quá lớn, vui lòng upload file khác');
+              } else {
+                throw new Error('An error occurred while uploading the file');
+              }
+            }
+            return response.json();
+          })
           .then(data => {
             console.log('url:', data);
             if (data.file_url) {
               console.log('success');
               document.getElementById('image-output').src = data.file_url; // Update the src attribute
-              if(data.label.includes("Real"))
-              {
+              if(data.label.includes("real")) {
                 document.getElementById('output').textContent = "Ảnh thật";
-              }
-              else
-              {
+              } else {
                 document.getElementById('output').textContent = "Ảnh fake";
               }
               document.getElementById('result-div').style.display = 'block';
@@ -173,7 +175,9 @@
           })
           .catch(error => {
             console.error('Error:', error);
-            alert('An error occurred while uploading the file');
+            document.getElementById('errorMessage').textContent = error.message;
+            var errorModal = new bootstrap.Modal(document.getElementById('errorModal'));
+            errorModal.show();
           })
           .finally(() => {
             // Hide the spinner
@@ -227,29 +231,22 @@
           </nav>
         </aside>
       
-        <div class="uppload-help-loading">
-          <div class="uppload-loader">
-            <div></div>
-            <p class="uppload-loader-text">Loading help...</p>
-          </div>
-        </div>
-        <div class="uppload-help">
-          <div>
-            <button>
-              <span>Close help</span><span aria-hidden="true">×</span>
-            </button>
-          </div>
-          <iframe></iframe>
-        </div>
+     <!-- Error Modal -->
+<div class="modal fade" id="errorModal" tabindex="-1" aria-labelledby="errorModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="errorModalLabel">Error</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
-      <div class="uppload-modal-bg">
-        <button class="uppload-close" aria-label="Close">×</button>
+      <div class="modal-body">
+        <p id="errorMessage"></p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
       </div>
     </div>
-    <script
-      src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.bundle.min.js"
-      integrity="sha384-A3rJD856KowSb7dwlZdYEkO39Gagi7vIsF0jrRAoQmDKKtQBHUuLZ9AsSv4jD4Xa"
-      crossorigin="anonymous"
-    ></script>
+  </div>
+</div>
   </body>
 </html>

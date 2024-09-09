@@ -6,59 +6,38 @@ import cv2
 from tensorflow.keras.applications import DenseNet121
 import tensorflow as tf
 
-def detect(imgpath, outname):
-    thresh = 0.5
-    # Khởi chạy mô hình nhận diện khuôn mặt
-    network = cv2.dnn.readNetFromCaffe('./DNN_face_detector/deploy.prototxt',
-                                       './DNN_face_detector/res10_300x300_ssd_iter_140000.caffemodel')
-    # Load mô hình đã đào tạo trên Google Colab
+def detect(imgpath):
+    print(imgpath)
+  
+    # Load file trọng số đã đào tạo trên Google Colab
     model = tf.keras.models.load_model('./fakevsreal_weights.keras')
     # Load nhãn đã được mã hoá (Label Encoder)
-    le = pickle.loads(open('./le.pickle', "rb").read())
+    labels = ['real', 'fake']
 
-    # image path
-    img = cv2.imread(imgpath)
-    (h, w) = img.shape[:2]
-    blob = cv2.dnn.blobFromImage(cv2.resize(img, (300, 300)), 1.0, (300, 300), (104.0, 177.0, 123.0))
-    network.setInput(blob)
-    detections = network.forward()
-    result_text = ""
-    label = "Unknown"  # Initialize label to handle cases where no face is detected
-    for i in range(0, detections.shape[2]):
-        confidence = detections[0, 0, i, 2]
-        if confidence > 0.5:
-            box = detections[0, 0, i, 3:7] * np.array([w, h, w, h])
-            (startX, startY, endX, endY) = box.astype("int")
-            startX = max(0, startX)
-            startY = max(0, startY)
-            endX = min(w, endX)
-            endY = min(h, endY)
-            # Lấy vùng khuôn mặt
-            face = img[startY:endY, startX:endX]
-            if face.size == 0:
-                print("Failed to extract face region")
-                continue
-            try:
-                face = cv2.resize(face, (224, 224))
-            except Exception as e:
-                print(f"Error resizing face: {e}")
-                continue
-            face = face.astype("float") / 255.0
-            face = img_to_array(face)
-            face = np.expand_dims(face, axis=0)
+   
+    image = cv2.imread(imgpath)
+   
+    image = cv2.resize(image, (128, 128))
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+     # Converting it to numpy array and expanding dimensions
+    image = np.expand_dims(image, 0)
+    
+    # Predicting the label
+    predictions = model.predict(image)
+    
+    # Extracting the label with maximum probability
+    label = labels[np.argmax(predictions[0])]
+    
+    # Calculating the probability
+    probab = float(round(predictions[0][np.argmax(predictions[0])]*100, 2))
+  
 
-            try:
-                # Model sẽ dự đoán khuôn mặt là real/deepfake
-                preds = model.predict(face)[0]
-                print("model.predict value : " + str(model.predict(face)))
-                j = np.argmax(preds)
-                print("j value: " + str(j))
-                label = le.classes_[j]
-                print("Label is: " + str(label))
-                result_text = f"Result: {label}"
-               
+                   
 
-    return {"label": label}
+    return {"label": label,
+        'probablity': probab
+    
+    }
 
 if __name__ == '__main__':
     detect()
