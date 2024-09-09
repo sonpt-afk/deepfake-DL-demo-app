@@ -151,7 +151,7 @@
           .then(response => {
             if (!response.ok) {
               if (response.status === 413) {
-                throw new Error('Kích thước file quá lớn, vui lòng upload file khác');
+                throw new Error('Kích thước file quá lớn, vui lòng upload file nhỏ hơn 5MB');
               } else {
                 throw new Error('An error occurred while uploading the file');
               }
