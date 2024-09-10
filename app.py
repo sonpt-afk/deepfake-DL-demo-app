@@ -25,8 +25,8 @@ def upload_image():
     filename = secure_filename(uploaded_file.filename)
     if filename != '':
         file_ext = os.path.splitext(filename)[1]
-        if file_ext not in app.config['UPLOAD_EXTENSIONS'] :
-            abort(400)
+        if file_ext not in app.config['UPLOAD_EXTENSIONS']:
+            abort(415)
         file_path = os.path.join(app.config['UPLOAD_PATH'], filename)
         uploaded_file.save(file_path)
         
@@ -40,6 +40,9 @@ def upload_image():
 def request_entity_too_large(error):
     return jsonify({'message': 'Kích thước file quá lớn, vui lòng upload file < 5MB'}), 413
 
+@app.errorhandler(415)
+def unsupported_media_type(error):
+    return jsonify({'message': 'Định dạng file không được hỗ trợ, vui lòng upload file jpg/png/jpeg'}), 415
 
 @app.route('/uploads/<filename>')
 @cross_origin()

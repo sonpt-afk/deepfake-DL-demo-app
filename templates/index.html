@@ -82,8 +82,8 @@
               <h2>Vui lòng tải ảnh lên để hệ thống kiểm tra
               </h2>
               <form id="upload-form" enctype="multipart/form-data">
-                <p><input type="file" name="file" id="file-input"  accept=".jpg, .jpeg, .png"/></p>
-                <p><input type="submit" value="Upload" /></p>
+                <input type="file" name="file" id="file-input"  />
+                <input type="submit" value="Upload" />
               </form>
               <div id="loading-spinner"  class="spinner-border wait-items text-primary" role="status" >
             </div>
@@ -152,7 +152,12 @@
             if (!response.ok) {
               if (response.status === 413) {
                 throw new Error('Kích thước file quá lớn, vui lòng upload file nhỏ hơn 5MB');
-              } else {
+              }
+              else if(response.status === 415){
+                throw new Error('Định dạng file không được hỗ trợ, vui lòng upload file jpg/png/jpeg');
+
+              }
+               else {
                 throw new Error('An error occurred while uploading the file');
               }
             }
