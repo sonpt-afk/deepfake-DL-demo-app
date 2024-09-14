@@ -389,10 +389,11 @@ h6 {
   # Hero Section
   --------------------------------------------------------------*/
 #hero {
-  width: 100%;
-  position: relative;
-  overflow: hidden;
-  padding: 140px 0 100px 0;
+  max-width: 100%;
+  padding: 120px 0 100px 0;
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
 }
 
 #hero::before {
@@ -416,11 +417,22 @@ h6 {
   font-family: "Poppins", sans-serif;
 }
 #image-container {
-  position: relative;
+  position: absolute;
+  right: 0;
+  top: 0;
 }
 #image-output {
-  max-width: 100%;
   cursor: crosshair;
+}
+.content-left {
+  max-width: 40%;
+}
+.content-right {
+  flex: 1;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
 }
 .selection-btns {
   margin-top: 40px;

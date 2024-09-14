@@ -54,29 +54,14 @@
     data-aos-duration="800"
     data-aos-delay="0"
   >
-    <button type="button" class="mobile-nav-toggle d-lg-none">
-      <i class="icofont-navigation-menu"></i>
-    </button>
-
-    <!-- ======= Header ======= -->
-    <header id="header" class="fixed-top">
-      <div class="container d-flex">
-        <div class="logo mr-auto">
-          <h1 class="text-light">SENSITY</h1>
-          <!-- Uncomment below if you prefer to use an image logo -->
-          <!-- <a href="index.html"><img src="assets/img/logo.png" alt="" class="img-fluid"></a>-->
-        </div>
-      </div>
-    </header>
+   
     <!-- End Header -->
 <!-- Add this inside the <body> tag, preferably near the form -->
 
     <!-- ======= Hero Section ======= -->
-    <section id="hero" class="d-flex align-items-center">
-      <div class="container">
-        <div class="row">
+    <div id="hero" >
           
-            <div>
+            <div class="content-left">
               <h1>Sensity - Hệ thống phát hiện DeepFake dựa trên 
                 Deep Learning</h1>
               <h2>Vui lòng tải ảnh lên để hệ thống kiểm tra
@@ -93,12 +78,10 @@
 
               <span role="status" id="loading-text" class="wait-items">Đang phân tích ảnh của bạn, vui lòng chờ nhé !</span>
             </div>
-            </div>
-          </div>
           <div
-            class="banner-img"
+            class="content-right"
           >
-          <div id="image-container" style="position: relative;">
+          <div id="image-container" >
             <img src="assets/img/mainpage.jpg" alt="" id="image-output" style="max-width: 100%;" />
           </div>
           <div class="selection-btns">
@@ -119,12 +102,10 @@
 
             </div>
           </div>
-        </div>
-      </div>
-    </section>
+    </div>
     <!-- End Hero -->
 
-    <main id="main">
+    <div id="main">
    
 
       <!-- Vendor JS Files -->
@@ -173,8 +154,6 @@
             reader.readAsDataURL(file);
           }
         });
-          
-
   drawSelectionButton.addEventListener('click', function() {
     img.addEventListener('mousedown', startSelection);
     img.addEventListener('mousemove', moveSelection);
@@ -242,6 +221,10 @@
       console.log('Cropped image prepared:', croppedFile);
       isBoxConfirmed = true;
       uploadButton.style.display = 'block';
+
+      // Display the cropped image in the img element
+      const croppedImageUrl = URL.createObjectURL(blob);
+      img.src = croppedImageUrl;
     }, 'image/jpeg');
 
     alert('Đã crop phần ảnh trong hình vuông, hãy upload để phát hiện deepfake trong khu vực đó ');
@@ -393,6 +376,9 @@
       </div>
     </div>
   </div>
+</div>
+</div>
+</div>
 </div>
   </body>
 </html>
