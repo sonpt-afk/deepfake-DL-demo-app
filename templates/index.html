@@ -98,15 +98,14 @@
           <div
             class="banner-img"
           >
-         <div id="draw-box-btns" style="display: none;"">
-          <button id="set-box" style=" margin-bottom: 10px;">Set Box for a Person (in case over 2 faces)</button><br>
-<button id="confirm-box" style=" margin-bottom: 30px;">Confirm Selection</button>
-</div>
-            <img
-              src="assets/img/mainpage.jpg"
-              alt=""
-              id="image-output"
-            />
+          <div id="image-container" style="position: relative;">
+            <img src="assets/img/mainpage.jpg" alt="" id="image-output" style="max-width: 100%;" />
+          </div>
+          <div class="selection-btns">
+          <button id="draw-selection" style="display: none;">Start Draw Selection</button>
+
+          <button id="confirm-selection" style="display: none;">Confirm Selection</button>
+        </div>
             <p
               id="image-credits"
               style="font-size: 10px; text-align: end; margin-top: 5px"
@@ -141,169 +140,198 @@
         src="https://unpkg.com/uppload@2.3.0/dist/browser.js"
         crossorigin="anonymous"
       ></script>
-      <script>
-        let isBoxConfirmed = false;
-        let croppedFile = null;
       
-        document.getElementById('file-input').addEventListener('change', function(event) {
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/0.4.1/html2canvas.min.js"></script>
+<script>
+  let isSelecting = false;
+  let startX, startY, endX, endY;
+  let isBoxConfirmed = false;
+  let croppedFile = null;
+
+  const img = document.getElementById('image-output');
+  const drawSelectionButton = document.getElementById('draw-selection');
+  const confirmButton = document.getElementById('confirm-selection');
+  const uploadButton = document.querySelector('#upload-form input[type="submit"]'); // Use the upload button inside the form
+  const overlay = document.createElement('div');
+  overlay.style.position = 'absolute';
+  overlay.style.background = 'rgba(255, 255, 255, 0.5)';
+  overlay.style.border = '2px dashed red';
+  overlay.style.display = 'none';
+  document.getElementById('image-container').appendChild(overlay); // Append overlay to the image container
+
+  document.getElementById('file-input').addEventListener('change', function(event) {
           var file = event.target.files[0];
           if (file) {
             var reader = new FileReader();
             reader.onload = function(e) {
-              document.getElementById('image-output').src = e.target.result; // Update the src attribute
-              document.getElementById('draw-box-btns').style.display = 'block';
+              img.src = e.target.result; // Update the src attribute
               isBoxConfirmed = false;
               croppedFile = null;
+              drawSelectionButton.style.display = 'block';
+              confirmButton.style.display = 'block';
             };
             reader.readAsDataURL(file);
           }
         });
-      
-        var img = document.getElementById('image-output');
-        var box = document.createElement('div');
-        box.id = 'detect-box'; 
-                box.style.position = 'absolute';
-        box.style.border = '2px solid red';
-        box.style.width = '150px';
-        box.style.height = '150px';
-        box.style.display = 'none';
-        document.body.appendChild(box);
-      
-        var offsetX, offsetY, startX, startY;
-        var isDragging = false;
-      
-        document.getElementById('set-box').addEventListener('click', function() {
-          box.style.display = 'block';
-          img.parentElement.style.position = 'relative';
-          box.style.left = (img.offsetLeft + img.width / 2 - 75) + 'px';
-          box.style.top = (img.offsetTop + img.height / 2 - 75) + 'px';
-      
-          box.addEventListener('mousedown', function(e) {
-            isDragging = true;
-            offsetX = e.clientX - box.offsetLeft;
-            offsetY = e.clientY - box.offsetTop;
-          });
-      
-          document.addEventListener('mousemove', function(e) {
-            if (isDragging) {
-              box.style.left = (e.clientX - offsetX) + 'px';
-              box.style.top = (e.clientY - offsetY) + 'px';
-            }
-          });
-      
-          document.addEventListener('mouseup', function() {
-            isDragging = false;
-          });
-      
-          document.getElementById('confirm-box').style.display = 'block';
-        });
-      
-        document.getElementById('confirm-box').addEventListener('click', function() {
-          var boxX = box.offsetLeft - img.offsetLeft;
-          var boxY = box.offsetTop - img.offsetTop;
-      
-          var canvas = document.createElement('canvas');
-          canvas.width = 150;
-          canvas.height = 150;
-          var ctx = canvas.getContext('2d');
-      
-          var image = new Image();
-          image.src = img.src;
-          image.onload = function() {
-            ctx.drawImage(image, boxX, boxY, 150, 150, 0, 0, 150, 150);
-            canvas.toBlob(function(blob) {
-              croppedFile = new File([blob], 'cropped_image.jpg', { type: 'image/jpeg' });
-              isBoxConfirmed = true;
-              console.log('Cropped image prepared:', croppedFile);
-            }, 'image/jpeg');
-          };
-          alert('Đã crop phần ảnh trong hình vuông, hãy upload để phát hiện deepfake trong khu vực đó ')
-        
-        });
-      
+          
 
-        document.getElementById('upload-form').addEventListener('submit', function(event) {
-          event.preventDefault();
-          var formData = new FormData();
-          var fileInput = document.getElementById('file-input');
-      
-          if (isBoxConfirmed && croppedFile) {
-            formData.append('file', croppedFile);
-            uploadEndpoint = '/upload_with_box';
-          } else {
-            formData.append('file', fileInput.files[0]);
-            uploadEndpoint = '/';
-          }
-      
-          // Show the spinner
-          document.getElementById('loading-spinner').style.display = 'block';
-          document.getElementById('loading-text').style.display = 'block';
-      
-          fetch(uploadEndpoint, {
+  drawSelectionButton.addEventListener('click', function() {
+    img.addEventListener('mousedown', startSelection);
+    img.addEventListener('mousemove', moveSelection);
+    img.addEventListener('mouseup', endSelection);
+  });
+
+  function startSelection(e) {
+    isSelecting = true;
+    const rect = img.getBoundingClientRect();
+    startX = e.clientX - rect.left;
+    startY = e.clientY - rect.top;
+    overlay.style.left = startX + 'px';
+    overlay.style.top = startY + 'px';
+    overlay.style.width = '0px';
+    overlay.style.height = '0px';
+    overlay.style.display = 'block';
+    confirmButton.style.display = 'none';
+  }
+
+  function moveSelection(e) {
+    if (isSelecting) {
+      const rect = img.getBoundingClientRect();
+      endX = e.clientX - rect.left;
+      endY = e.clientY - rect.top;
+      overlay.style.width = Math.abs(endX - startX) + 'px';
+      overlay.style.height = Math.abs(endY - startY) + 'px';
+      overlay.style.left = Math.min(startX, endX) + 'px';
+      overlay.style.top = Math.min(startY, endY) + 'px';
+    }
+  }
+
+  function endSelection() {
+    isSelecting = false;
+    confirmButton.style.display = 'block';
+    img.removeEventListener('mousedown', startSelection);
+    img.removeEventListener('mousemove', moveSelection);
+    img.removeEventListener('mouseup', endSelection);
+  }
+
+  confirmButton.addEventListener('click', function() {
+    const rect = img.getBoundingClientRect();
+    const scaleX = img.naturalWidth / rect.width;
+    const scaleY = img.naturalHeight / rect.height;
+
+    const cropX = Math.min(startX, endX) * scaleX;
+    const cropY = Math.min(startY, endY) * scaleY;
+    const cropWidth = Math.abs(endX - startX) * scaleX;
+    const cropHeight = Math.abs(endY - startY) * scaleY;
+
+    console.log('Cropped part metadata:', {
+      cropX,
+      cropY,
+      cropWidth,
+      cropHeight
+    });
+
+    const croppedCanvas = document.createElement('canvas');
+    croppedCanvas.width = cropWidth;
+    croppedCanvas.height = cropHeight;
+    const ctx = croppedCanvas.getContext('2d');
+
+    ctx.drawImage(img, cropX, cropY, cropWidth, cropHeight, 0, 0, cropWidth, cropHeight);
+    croppedCanvas.toBlob(function(blob) {
+      croppedFile = new File([blob], 'cropped_image.jpg', { type: 'image/jpeg' });
+      console.log('Cropped image prepared:', croppedFile);
+      isBoxConfirmed = true;
+      uploadButton.style.display = 'block';
+    }, 'image/jpeg');
+
+    alert('Đã crop phần ảnh trong hình vuông, hãy upload để phát hiện deepfake trong khu vực đó ');
+
+    // Hide the confirm button and overlay
+    confirmButton.style.display = 'none';
+    overlay.style.display = 'none';
+  });
+
+  document.getElementById('upload-form').addEventListener('submit', function(event) {
+    event.preventDefault();
+    var formData = new FormData();
+    var fileInput = document.getElementById('file-input');
+
+    if (isBoxConfirmed && croppedFile) {
+      formData.append('file', croppedFile);
+      uploadEndpoint = '/upload_with_box';
+    } else {
+      formData.append('file', fileInput.files[0]);
+      uploadEndpoint = '/';
+    }
+
+    // Show the spinner
+    document.getElementById('loading-spinner').style.display = 'block';
+    document.getElementById('loading-text').style.display = 'block';
+
+    fetch(uploadEndpoint, {
+      method: 'POST',
+      body: formData
+    })
+    .then(response => {
+      if (!response.ok) {
+        if (response.status === 413) {
+          throw new Error('Kích thước file quá lớn, vui lòng upload file nhỏ hơn 5MB');
+        }
+        else if(response.status === 415){
+          throw new Error('Định dạng file không được hỗ trợ, vui lòng upload file jpg/png/jpeg');
+        }
+        else {
+          throw new Error('An error occurred while uploading the file');
+        }
+      }
+      return response.json();
+    })
+    .then(data => {
+      if (data.file_url) {
+        console.log('Uploaded image metadata:', data);
+        img.src = data.file_url; // Update the src attribute
+        if(data.label.includes("real")) {
+          document.getElementById('output').textContent = "Ảnh thật";
+        } else {
+          document.getElementById('output').textContent = "Ảnh fake";
+        }
+        document.getElementById('percent').textContent = "Xác suất: "+ data.percent+" %";
+
+        document.getElementById('result-div').style.display = 'block';
+        document.getElementById('download-report').style.display = 'block';
+        document.getElementById('download-report').onclick = async function () {
+          const reportResponse = await fetch('/download_report', {
             method: 'POST',
-            body: formData
-          })
-          .then(response => {
-            if (!response.ok) {
-              if (response.status === 413) {
-                throw new Error('Kích thước file quá lớn, vui lòng upload file nhỏ hơn 5MB');
-              }
-              else if(response.status === 415){
-                throw new Error('Định dạng file không được hỗ trợ, vui lòng upload file jpg/png/jpeg');
-              }
-              else {
-                throw new Error('An error occurred while uploading the file');
-              }
-            }
-            return response.json();
-          })
-          .then(data => {
-            if (data.file_url) {
-              console.log('Uploaded image metadata:', data);
-              document.getElementById('image-output').src = data.file_url; // Update the src attribute
-              if(data.label.includes("real")) {
-                document.getElementById('output').textContent = "Ảnh thật";
-              } else {
-                document.getElementById('output').textContent = "Ảnh fake";
-              }
-              document.getElementById('percent').textContent = "Xác suất: "+ data.percent+" %";
-      
-              document.getElementById('result-div').style.display = 'block';
-              document.getElementById('download-report').style.display = 'block';
-              document.getElementById('download-report').onclick = async function () {
-                const reportResponse = await fetch('/download_report', {
-                  method: 'POST',
-                  headers: {
-                    'Content-Type': 'application/json',
-                  },
-                  body: JSON.stringify(data),
-                });
-                const blob = await reportResponse.blob();
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.style = 'none';
-                a.href = url;
-                a.download = 'report.pdf';
-                document.body.appendChild(a);
-                a.click();
-                window.URL.revokeObjectURL(url);
-              };
-              document.getElementById('detect-box').style.display = 'none';
-
-            } else {
-              alert('File upload failed');
-            }
-          })
-          .catch(error => {
-            alert(error)
-          })
-          .finally(() => {
-            // Hide the spinner
-            document.getElementById('loading-spinner').style.display = 'none';
-            document.getElementById('loading-text').style.display = 'none';
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data),
           });
-        });
-      </script>
+          const blob = await reportResponse.blob();
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.style.display = 'none';
+          a.href = url;
+          a.download = 'report.pdf';
+          document.body.appendChild(a);
+          a.click();
+          window.URL.revokeObjectURL(url);
+        };
+      } else {
+        alert('File upload failed');
+      }
+    })
+    .catch(error => {
+      alert(error)
+    })
+    .finally(() => {
+      // Hide the spinner
+      document.getElementById('loading-spinner').style.display = 'none';
+      document.getElementById('loading-text').style.display = 'none';
+    });
+  });
+</script>
+
     </strong>
     <nav class="mobile-nav d-lg-none">
       <ul>

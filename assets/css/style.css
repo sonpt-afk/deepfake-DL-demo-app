@@ -415,7 +415,16 @@ h6 {
   color: #5777ba;
   font-family: "Poppins", sans-serif;
 }
-
+#image-container {
+  position: relative;
+}
+#image-output {
+  max-width: 100%;
+  cursor: crosshair;
+}
+.selection-btns {
+  margin-top: 40px;
+}
 #hero h2 {
   color: #515f7d;
   margin-bottom: 50px;
@@ -425,6 +434,9 @@ h6 {
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%);
+}
+#selection-box {
+  cursor: crosshair;
 }
 #download-report {
   margin-top: 30px;
