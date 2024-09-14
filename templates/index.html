@@ -85,6 +85,9 @@
                 <input type="file" name="file" id="file-input"  />
                 <input type="submit" value="Upload" />
               </form>
+
+              <button id="download-report" style="display: none">Download Report</button>
+
               <div id="loading-spinner"  class="spinner-border wait-items text-primary" role="status" >
             </div>
 
@@ -177,6 +180,25 @@
 
               
               document.getElementById('result-div').style.display = 'block';
+              document.getElementById('download-report').style.display = 'block';
+              document.getElementById('download-report').onclick = async function () {
+                const reportResponse = await fetch('/download_report', {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify(data),
+                });
+                const blob = await reportResponse.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = url;
+                a.download = 'report.pdf';
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+              };
             } else {
               alert('File upload failed');
             }

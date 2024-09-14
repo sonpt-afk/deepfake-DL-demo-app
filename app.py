@@ -1,10 +1,13 @@
 import imghdr
 import os
-from flask import Flask, render_template, request, flash, redirect, url_for, abort, send_from_directory, jsonify
+from flask import Flask,send_file, render_template, request, flash, redirect, url_for, abort, send_from_directory, jsonify
 from werkzeug.utils import secure_filename
 from flask_cors import CORS, cross_origin
 from detect import detect
 import uuid
+import io
+from reportlab.lib.pagesizes import letter  # Import letter
+from reportlab.pdfgen import canvas  # Import canvas
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
@@ -18,6 +21,34 @@ app.config['UPLOAD_PATH'] = './uploads'
 def index():
     return render_template('index.html')
 
+@app.route('/download_report', methods=['POST'])
+@cross_origin()
+def download_report():
+    data = request.json
+    label = data.get('label')
+    probability = data.get('percent')
+    imgpath = data.get('file_url')
+
+    # Tạo PDF
+    buffer = io.BytesIO()
+    c = canvas.Canvas(buffer, pagesize=letter)
+    width, height = letter
+
+    c.drawString(100, height - 100, f"Kết quả phân tích ảnh")
+    c.drawString(100, height - 120, f"Đường dẫn ảnh: {imgpath}")
+    c.drawString(100, height - 140, f"Nhãn: {label}")
+    c.drawString(100, height - 160, f"Độ tin cậy: {probability}%")
+
+    # Thêm ảnh vào PDF
+    if os.path.exists(imgpath):
+        c.drawImage(imgpath, 100, height - 300, width=200, height=200)
+
+    c.showPage()
+    c.save()
+
+    buffer.seek(0)
+    return send_file(buffer, as_attachment=True, download_name='report.pdf', mimetype='application/pdf')
+    
 @app.route('/', methods=['POST'])
 @cross_origin()
 def upload_image():
