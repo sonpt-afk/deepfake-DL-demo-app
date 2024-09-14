@@ -49,6 +49,7 @@ def download_report():
     buffer.seek(0)
     return send_file(buffer, as_attachment=True, download_name='report.pdf', mimetype='application/pdf')
     
+    # upload original img
 @app.route('/', methods=['POST'])
 @cross_origin()
 def upload_image():
@@ -64,8 +65,28 @@ def upload_image():
         # Call the detect function and get the result
         result = detect(file_path)
         
-        return jsonify({'file_url': url_for('upload', filename=filename, _external=True), 'label': result['label'], 'percent':result['probablity']})
+        return jsonify({'file_url': url_for('upload', filename=filename, _external=True), 'label': result['label'], 'percent':result['probability']})
     return jsonify({'error': 'No file uploaded'}), 400
+
+# upload cropped img
+@app.route('/upload_with_box', methods=['POST'])
+@cross_origin()
+def upload_with_box():
+    uploaded_file = request.files['file']
+    filename = secure_filename(uploaded_file.filename)
+    if filename != '':
+        file_ext = os.path.splitext(filename)[1]
+        if file_ext not in app.config['UPLOAD_EXTENSIONS']:
+            abort(415)
+        file_path = os.path.join(app.config['UPLOAD_PATH'], filename)
+        uploaded_file.save(file_path)
+        
+        # Call the detect function and get the result
+        result = detect(file_path)
+        
+        return jsonify({'file_url': url_for('upload', filename=filename, _external=True), 'label': result['label'], 'percent': result['probability']})
+    return jsonify({'error': 'No file uploaded'}), 400
+
 
 @app.errorhandler(413)
 def request_entity_too_large(error):

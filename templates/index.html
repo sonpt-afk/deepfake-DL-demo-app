@@ -142,70 +142,104 @@
         crossorigin="anonymous"
       ></script>
       <script>
+        let isBoxConfirmed = false;
+        let croppedFile = null;
+      
         document.getElementById('file-input').addEventListener('change', function(event) {
-    var file = event.target.files[0];
-    if (file) {
-      var reader = new FileReader();
-      reader.onload = function(e) {
-        document.getElementById('image-output').src = e.target.result; // Update the src attribute
-        document.getElementById('draw-box-btns').style.display = 'block';
-      };
-      reader.readAsDataURL(file);
-    }
-  });
-  //code cho phép user drag and drop khối hình vuông size 140x140 px vào trong hình ảnh được hiển thị (#image-output) sau khi upload 
-  var img = document.getElementById('image-output');
-  var box = document.createElement('div');
-  box.style.position = 'absolute';
-  box.style.border = '2px solid red';
-  box.style.width = '150px';
-  box.style.height = '150px';
-  box.style.display = 'none';
-  document.body.appendChild(box);
-
-  var offsetX, offsetY, startX, startY;
-  var isDragging = false;
-
-  document.getElementById('set-box').addEventListener('click', function() {
-    box.style.display = 'block';
-    img.parentElement.style.position = 'relative';
-    box.style.left = (img.offsetLeft + img.width / 2 - 75) + 'px';
-    box.style.top = (img.offsetTop + img.height / 2 - 75) + 'px';
-
-    box.addEventListener('mousedown', function(e) {
-      isDragging = true;
-      offsetX = e.clientX - box.offsetLeft;
-      offsetY = e.clientY - box.offsetTop;
-    });
-
-    document.addEventListener('mousemove', function(e) {
-      if (isDragging) {
-        box.style.left = (e.clientX - offsetX) + 'px';
-        box.style.top = (e.clientY - offsetY) + 'px';
-      }
-    });
-
-    document.addEventListener('mouseup', function() {
-      isDragging = false;
-    });
-
-    document.getElementById('confirm-box').style.display = 'block';
-  });
-
-  
-
+          var file = event.target.files[0];
+          if (file) {
+            var reader = new FileReader();
+            reader.onload = function(e) {
+              document.getElementById('image-output').src = e.target.result; // Update the src attribute
+              document.getElementById('draw-box-btns').style.display = 'block';
+              isBoxConfirmed = false;
+              croppedFile = null;
+            };
+            reader.readAsDataURL(file);
+          }
+        });
+      
+        var img = document.getElementById('image-output');
+        var box = document.createElement('div');
+        box.id = 'detect-box'; 
+                box.style.position = 'absolute';
+        box.style.border = '2px solid red';
+        box.style.width = '150px';
+        box.style.height = '150px';
+        box.style.display = 'none';
+        document.body.appendChild(box);
+      
+        var offsetX, offsetY, startX, startY;
+        var isDragging = false;
+      
+        document.getElementById('set-box').addEventListener('click', function() {
+          box.style.display = 'block';
+          img.parentElement.style.position = 'relative';
+          box.style.left = (img.offsetLeft + img.width / 2 - 75) + 'px';
+          box.style.top = (img.offsetTop + img.height / 2 - 75) + 'px';
+      
+          box.addEventListener('mousedown', function(e) {
+            isDragging = true;
+            offsetX = e.clientX - box.offsetLeft;
+            offsetY = e.clientY - box.offsetTop;
+          });
+      
+          document.addEventListener('mousemove', function(e) {
+            if (isDragging) {
+              box.style.left = (e.clientX - offsetX) + 'px';
+              box.style.top = (e.clientY - offsetY) + 'px';
+            }
+          });
+      
+          document.addEventListener('mouseup', function() {
+            isDragging = false;
+          });
+      
+          document.getElementById('confirm-box').style.display = 'block';
+        });
+      
+        document.getElementById('confirm-box').addEventListener('click', function() {
+          var boxX = box.offsetLeft - img.offsetLeft;
+          var boxY = box.offsetTop - img.offsetTop;
+      
+          var canvas = document.createElement('canvas');
+          canvas.width = 150;
+          canvas.height = 150;
+          var ctx = canvas.getContext('2d');
+      
+          var image = new Image();
+          image.src = img.src;
+          image.onload = function() {
+            ctx.drawImage(image, boxX, boxY, 150, 150, 0, 0, 150, 150);
+            canvas.toBlob(function(blob) {
+              croppedFile = new File([blob], 'cropped_image.jpg', { type: 'image/jpeg' });
+              isBoxConfirmed = true;
+              console.log('Cropped image prepared:', croppedFile);
+            }, 'image/jpeg');
+          };
+          alert('Đã crop phần ảnh trong hình vuông, hãy upload để phát hiện deepfake trong khu vực đó ')
+        
+        });
+      
 
         document.getElementById('upload-form').addEventListener('submit', function(event) {
           event.preventDefault();
           var formData = new FormData();
           var fileInput = document.getElementById('file-input');
-          formData.append('file', fileInput.files[0]);
+      
+          if (isBoxConfirmed && croppedFile) {
+            formData.append('file', croppedFile);
+            uploadEndpoint = '/upload_with_box';
+          } else {
+            formData.append('file', fileInput.files[0]);
+            uploadEndpoint = '/';
+          }
       
           // Show the spinner
           document.getElementById('loading-spinner').style.display = 'block';
           document.getElementById('loading-text').style.display = 'block';
       
-          fetch('/', {
+          fetch(uploadEndpoint, {
             method: 'POST',
             body: formData
           })
@@ -216,9 +250,8 @@
               }
               else if(response.status === 415){
                 throw new Error('Định dạng file không được hỗ trợ, vui lòng upload file jpg/png/jpeg');
-
               }
-               else {
+              else {
                 throw new Error('An error occurred while uploading the file');
               }
             }
@@ -226,6 +259,7 @@
           })
           .then(data => {
             if (data.file_url) {
+              console.log('Uploaded image metadata:', data);
               document.getElementById('image-output').src = data.file_url; // Update the src attribute
               if(data.label.includes("real")) {
                 document.getElementById('output').textContent = "Ảnh thật";
@@ -233,8 +267,7 @@
                 document.getElementById('output').textContent = "Ảnh fake";
               }
               document.getElementById('percent').textContent = "Xác suất: "+ data.percent+" %";
-
-              
+      
               document.getElementById('result-div').style.display = 'block';
               document.getElementById('download-report').style.display = 'block';
               document.getElementById('download-report').onclick = async function () {
@@ -248,21 +281,21 @@
                 const blob = await reportResponse.blob();
                 const url = window.URL.createObjectURL(blob);
                 const a = document.createElement('a');
-                a.style.display = 'none';
+                a.style = 'none';
                 a.href = url;
                 a.download = 'report.pdf';
                 document.body.appendChild(a);
                 a.click();
                 window.URL.revokeObjectURL(url);
               };
+              document.getElementById('detect-box').style.display = 'none';
+
             } else {
               alert('File upload failed');
             }
           })
           .catch(error => {
-            
             alert(error)
-            
           })
           .finally(() => {
             // Hide the spinner

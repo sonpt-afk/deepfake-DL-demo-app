@@ -35,7 +35,7 @@ def detect(imgpath):
                    
 
     return {"label": label,
-        'probablity': probab
+        'probability': probab
     
     }
 
