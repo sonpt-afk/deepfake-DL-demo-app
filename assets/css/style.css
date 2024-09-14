@@ -37,6 +37,10 @@ body {
   display: none;
 }
 
+#draw-box-btns {
+  margin-bottom: 40px;
+}
+
 #loading-spinner {
   margin-top: 30px;
   margin-left: 50px;
@@ -418,6 +422,9 @@ h6 {
   font-size: 20px;
 }
 
+#download-report {
+  margin-top: 30px;
+}
 #hero .download-btn {
   font-family: "Raleway", sans-serif;
   font-weight: 500;

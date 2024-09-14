@@ -98,6 +98,10 @@
           <div
             class="banner-img"
           >
+         <div id="draw-box-btns" style="display: none;"">
+          <button id="set-box" style=" margin-bottom: 10px;">Set Box for a Person (in case over 2 faces)</button><br>
+<button id="confirm-box" style=" margin-bottom: 30px;">Confirm Selection</button>
+</div>
             <img
               src="assets/img/mainpage.jpg"
               alt=""
@@ -138,6 +142,59 @@
         crossorigin="anonymous"
       ></script>
       <script>
+        document.getElementById('file-input').addEventListener('change', function(event) {
+    var file = event.target.files[0];
+    if (file) {
+      var reader = new FileReader();
+      reader.onload = function(e) {
+        document.getElementById('image-output').src = e.target.result; // Update the src attribute
+        document.getElementById('draw-box-btns').style.display = 'block';
+      };
+      reader.readAsDataURL(file);
+    }
+  });
+  //code cho phép user drag and drop khối hình vuông size 140x140 px vào trong hình ảnh được hiển thị (#image-output) sau khi upload 
+  var img = document.getElementById('image-output');
+  var box = document.createElement('div');
+  box.style.position = 'absolute';
+  box.style.border = '2px solid red';
+  box.style.width = '150px';
+  box.style.height = '150px';
+  box.style.display = 'none';
+  document.body.appendChild(box);
+
+  var offsetX, offsetY, startX, startY;
+  var isDragging = false;
+
+  document.getElementById('set-box').addEventListener('click', function() {
+    box.style.display = 'block';
+    img.parentElement.style.position = 'relative';
+    box.style.left = (img.offsetLeft + img.width / 2 - 75) + 'px';
+    box.style.top = (img.offsetTop + img.height / 2 - 75) + 'px';
+
+    box.addEventListener('mousedown', function(e) {
+      isDragging = true;
+      offsetX = e.clientX - box.offsetLeft;
+      offsetY = e.clientY - box.offsetTop;
+    });
+
+    document.addEventListener('mousemove', function(e) {
+      if (isDragging) {
+        box.style.left = (e.clientX - offsetX) + 'px';
+        box.style.top = (e.clientY - offsetY) + 'px';
+      }
+    });
+
+    document.addEventListener('mouseup', function() {
+      isDragging = false;
+    });
+
+    document.getElementById('confirm-box').style.display = 'block';
+  });
+
+  
+
+
         document.getElementById('upload-form').addEventListener('submit', function(event) {
           event.preventDefault();
           var formData = new FormData();
@@ -169,7 +226,6 @@
           })
           .then(data => {
             if (data.file_url) {
-              console.log('success');
               document.getElementById('image-output').src = data.file_url; // Update the src attribute
               if(data.label.includes("real")) {
                 document.getElementById('output').textContent = "Ảnh thật";
