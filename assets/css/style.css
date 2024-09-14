@@ -37,12 +37,22 @@ body {
   display: none;
 }
 
+#loading-spinner {
+  margin-top: 30px;
+  margin-left: 50px;
+}
 #image-output {
   width: 60%;
   margin: auto;
 }
 
+#percent {
+  font-size: 25px;
+}
+
 #output {
+  color: #000;
+  font-size: 30px;
 }
 a {
   color: #5777ba;

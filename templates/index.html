@@ -107,8 +107,9 @@
              
             </p>
             <div id="result-div" style="display: none; margin-top: 20px">
-              <label>Kết quả dự đoán</label>
-              <h1 id="output"></h1>
+              <h1>Kết quả dự đoán</h1>
+              <p id="output"></p><br>
+              <p id="percent"></p>
 
             </div>
           </div>
@@ -164,7 +165,6 @@
             return response.json();
           })
           .then(data => {
-            console.log('url:', data);
             if (data.file_url) {
               console.log('success');
               document.getElementById('image-output').src = data.file_url; // Update the src attribute
@@ -173,6 +173,9 @@
               } else {
                 document.getElementById('output').textContent = "Ảnh fake";
               }
+              document.getElementById('percent').textContent = "Xác suất: "+ data.percent+" %";
+
+              
               document.getElementById('result-div').style.display = 'block';
             } else {
               alert('File upload failed');

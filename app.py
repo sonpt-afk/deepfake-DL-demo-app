@@ -33,7 +33,7 @@ def upload_image():
         # Call the detect function and get the result
         result = detect(file_path)
         
-        return jsonify({'file_url': url_for('upload', filename=filename, _external=True), 'label': result['label']})
+        return jsonify({'file_url': url_for('upload', filename=filename, _external=True), 'label': result['label'], 'percent':result['probablity']})
     return jsonify({'error': 'No file uploaded'}), 400
 
 @app.errorhandler(413)
