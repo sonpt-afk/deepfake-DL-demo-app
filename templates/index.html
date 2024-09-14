@@ -98,25 +98,23 @@
           <div
             class="banner-img"
           >
-          <button id="set-box" style="display: none;margin-bottom: 10px;">Set Box for a Person (in case over 2 faces)</button><br>
-          <button id="confirm-box" style="display: none;margin-bottom: 30px;">Confirm Selection</button>
-          <img
-          src="assets/img/mainpage.jpg"
-          alt=""
-          id="image-output"
-          style="max-width: 100%; position: relative;"
-        />
-        <p
-          id="image-credits"
-          style="font-size: 10px; text-align: end; margin-top: 5px"
-        >
-        </p>
-        <div id="result-div" style="display: none; margin-top: 20px">
-          <h1>Kết quả dự đoán</h1>
-          <p id="output"></p><br>
-          <p id="percent"></p>
-          
-        </div>
+            <img
+              src="assets/img/mainpage.jpg"
+              alt=""
+              id="image-output"
+            />
+            <p
+              id="image-credits"
+              style="font-size: 10px; text-align: end; margin-top: 5px"
+            >
+             
+            </p>
+            <div id="result-div" style="display: none; margin-top: 20px">
+              <h1>Kết quả dự đoán</h1>
+              <p id="output"></p><br>
+              <p id="percent"></p>
+
+            </div>
           </div>
         </div>
       </div>
@@ -140,71 +138,17 @@
         crossorigin="anonymous"
       ></script>
       <script>
-        document.getElementById('file-input').addEventListener('change', function(event) {
-          var file = event.target.files[0];
-          if (file) {
-            var reader = new FileReader();
-            reader.onload = function(e) {
-              document.getElementById('image-output').src = e.target.result; // Update the src attribute
-              document.getElementById('set-box').style.display = 'block';
-            };
-            reader.readAsDataURL(file);
-          }
-        });
-      
-        var img = document.getElementById('image-output');
-        var box = document.createElement('div');
-        box.style.position = 'absolute';
-        box.style.border = '2px solid red';
-        box.style.width = '160px';
-        box.style.height = '160px';
-        box.style.display = 'none';
-        document.body.appendChild(box);
-      
-        var offsetX, offsetY, startX, startY;
-        var isDragging = false;
-      
-        document.getElementById('set-box').addEventListener('click', function() {
-          box.style.display = 'block';
-          img.parentElement.style.position = 'relative';
-          box.style.left = img.offsetLeft + 'px';
-          box.style.top = img.offsetTop + 'px';
-      
-          box.addEventListener('mousedown', function(e) {
-            isDragging = true;
-            offsetX = e.clientX - box.offsetLeft;
-            offsetY = e.clientY - box.offsetTop;
-          });
-      
-          document.addEventListener('mousemove', function(e) {
-            if (isDragging) {
-              box.style.left = (e.clientX - offsetX) + 'px';
-              box.style.top = (e.clientY - offsetY) + 'px';
-            }
-          });
-      
-          document.addEventListener('mouseup', function() {
-            isDragging = false;
-          });
-      
-          document.getElementById('confirm-box').style.display = 'block';
-        });
-      
-        document.getElementById('confirm-box').addEventListener('click', function() {
-          var boxX = box.offsetLeft - img.offsetLeft;
-          var boxY = box.offsetTop - img.offsetTop;
-      
+        document.getElementById('upload-form').addEventListener('submit', function(event) {
+          event.preventDefault();
           var formData = new FormData();
           var fileInput = document.getElementById('file-input');
           formData.append('file', fileInput.files[0]);
-          formData.append('boxX', boxX);
-          formData.append('boxY', boxY);
       
           // Show the spinner
           document.getElementById('loading-spinner').style.display = 'block';
           document.getElementById('loading-text').style.display = 'block';
       
-          fetch('/upload_with_box', {
+          fetch('/', {
             method: 'POST',
             body: formData
           })
@@ -215,8 +159,9 @@
               }
               else if(response.status === 415){
                 throw new Error('Định dạng file không được hỗ trợ, vui lòng upload file jpg/png/jpeg');
+
               }
-              else {
+               else {
                 throw new Error('An error occurred while uploading the file');
               }
             }
@@ -224,18 +169,44 @@
           })
           .then(data => {
             if (data.file_url) {
+              console.log('success');
+              document.getElementById('image-output').src = data.file_url; // Update the src attribute
               if(data.label.includes("real")) {
                 document.getElementById('output').textContent = "Ảnh thật";
               } else {
                 document.getElementById('output').textContent = "Ảnh fake";
               }
               document.getElementById('percent').textContent = "Xác suất: "+ data.percent+" %";
+
+              
+              document.getElementById('result-div').style.display = 'block';
+              document.getElementById('download-report').style.display = 'block';
+              document.getElementById('download-report').onclick = async function () {
+                const reportResponse = await fetch('/download_report', {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify(data),
+                });
+                const blob = await reportResponse.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = url;
+                a.download = 'report.pdf';
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+              };
             } else {
               alert('File upload failed');
             }
           })
           .catch(error => {
+            
             alert(error)
+            
           })
           .finally(() => {
             // Hide the spinner
