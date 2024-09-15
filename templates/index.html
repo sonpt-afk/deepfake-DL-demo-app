@@ -281,6 +281,9 @@
         else if(response.status === 415){
           throw new Error('Định dạng file không được hỗ trợ, vui lòng upload file jpg/png/jpeg');
         }
+        else if(response.status === 422){
+          throw new Error('Không có khuôn mặt nào trong ảnh, hãy thử ảnh khác nhé');
+        }
         else {
           throw new Error('An error occurred while uploading the file');
         }

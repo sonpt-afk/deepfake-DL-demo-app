@@ -1,9 +1,9 @@
 import imghdr
 import os
-from flask import Flask,send_file, render_template, request, flash, redirect, url_for, abort, send_from_directory, jsonify
+from flask import Flask, send_file, render_template, request, flash, redirect, url_for, abort, send_from_directory, jsonify
 from werkzeug.utils import secure_filename
 from flask_cors import CORS, cross_origin
-from detect import detect
+from detect import detect, NoFaceDetectedException
 import uuid
 import io
 from reportlab.lib.pagesizes import letter  # Import letter
@@ -44,7 +44,6 @@ def download_report():
     c.drawString(100, height - 170, f"Result: {label}")
     c.drawString(100, height - 200, f"Probability: {probability}%")
 
-
     # Add timestamp
     from datetime import datetime
     gmt_time = datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S GMT')
@@ -59,7 +58,7 @@ def download_report():
 
     buffer.seek(0)
     return send_file(buffer, as_attachment=True, download_name='report.pdf', mimetype='application/pdf')
-    # upload original img
+
 @app.route('/', methods=['POST'])
 @cross_origin()
 def upload_image():
@@ -72,10 +71,12 @@ def upload_image():
         file_path = os.path.join(app.config['UPLOAD_PATH'], filename)
         uploaded_file.save(file_path)
         
-        # Call the detect function and get the result
-        result = detect(file_path)
-        
-        return jsonify({'file_url': url_for('upload', filename=filename, _external=True), 'label': result['label'], 'percent':result['probability']})
+        try:
+            # Call the detect function and get the result
+            result = detect(file_path)
+            return jsonify({'file_url': url_for('upload', filename=filename, _external=True), 'label': result['label'], 'percent': result['probability']})
+        except NoFaceDetectedException as e:
+            return jsonify({'error': str(e)}), 422  # Unprocessable Entity
     return jsonify({'error': 'No file uploaded'}), 400
 
 # upload cropped img
@@ -91,12 +92,13 @@ def upload_with_box():
         file_path = os.path.join(app.config['UPLOAD_PATH'], filename)
         uploaded_file.save(file_path)
         
-        # Call the detect function and get the result
-        result = detect(file_path)
-        
-        return jsonify({'file_url': url_for('upload', filename=filename, _external=True), 'label': result['label'], 'percent': result['probability']})
+        try:
+            # Call the detect function and get the result
+            result = detect(file_path)
+            return jsonify({'file_url': url_for('upload', filename=filename, _external=True), 'label': result['label'], 'percent': result['probability']})
+        except NoFaceDetectedException as e:
+            abort(422)  # Unprocessable Entity
     return jsonify({'error': 'No file uploaded'}), 400
-
 
 @app.errorhandler(413)
 def request_entity_too_large(error):
@@ -105,6 +107,10 @@ def request_entity_too_large(error):
 @app.errorhandler(415)
 def unsupported_media_type(error):
     return jsonify({'message': 'Định dạng file không được hỗ trợ, vui lòng upload file jpg/png/jpeg'}), 415
+
+@app.errorhandler(422)
+def no_face_img(error):
+    return jsonify({'message': 'Không có khuôn mặt nào trong ảnh, hãy thử ảnh khác nhé'}), 415
 
 @app.route('/uploads/<filename>')
 @cross_origin()
