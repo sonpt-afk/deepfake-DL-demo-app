@@ -34,10 +34,21 @@ def download_report():
     c = canvas.Canvas(buffer, pagesize=letter)
     width, height = letter
 
-    c.drawString(100, height - 100, f"Kết quả phân tích ảnh")
-    c.drawString(100, height - 120, f"Đường dẫn ảnh: {imgpath}")
-    c.drawString(100, height - 140, f"Nhãn: {label}")
-    c.drawString(100, height - 160, f"Độ tin cậy: {probability}%")
+    # Add title
+    c.setFont("Helvetica-Bold", 24)
+    c.drawString(100, height - 50, "DEEPFAKE DETECTION REPORT")
+
+    # Add content
+    c.setFont("Helvetica", 12)
+    c.drawString(100, height - 140, f"Image URL: {imgpath}")
+    c.drawString(100, height - 170, f"Result: {label}")
+    c.drawString(100, height - 200, f"Probability: {probability}%")
+
+
+    # Add timestamp
+    from datetime import datetime
+    gmt_time = datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S GMT')
+    c.drawString(100, height - 230, f"Timestamp: {gmt_time}")
 
     # Thêm ảnh vào PDF
     if os.path.exists(imgpath):
@@ -48,7 +59,6 @@ def download_report():
 
     buffer.seek(0)
     return send_file(buffer, as_attachment=True, download_name='report.pdf', mimetype='application/pdf')
-    
     # upload original img
 @app.route('/', methods=['POST'])
 @cross_origin()

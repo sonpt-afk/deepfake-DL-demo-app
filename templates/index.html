@@ -39,14 +39,7 @@
       href="https://unpkg.com/uppload@2.3.0/dist/themes/light.css"
       crossorigin="anonymous"
     />
-    <style>
-      .need-help-link {
-        display: none;
-      }
-      .uppload-modal section {
-        padding: 0;
-      }
-    </style>
+    
   </head>
 
   <body
@@ -54,7 +47,7 @@
     data-aos-duration="800"
     data-aos-delay="0"
   >
-   
+
     <!-- End Header -->
 <!-- Add this inside the <body> tag, preferably near the form -->
 
@@ -83,18 +76,14 @@
           >
           <div id="image-container" >
             <img src="assets/img/mainpage.jpg" alt="" id="image-output" style="max-width: 100%;" />
+
           </div>
           <div class="selection-btns">
-          <button id="draw-selection" style="display: none;">Start Draw Selection</button>
+          <button id="draw-selection" style="display: none;">Lọc khuôn mặt cần xác minh (ảnh chứa nhiều khuôn mặt)</button>
 
-          <button id="confirm-selection" style="display: none;">Confirm Selection</button>
+          <button id="confirm-selection" style="display: none;">Xác nhận </button>
         </div>
-            <p
-              id="image-credits"
-              style="font-size: 10px; text-align: end; margin-top: 5px"
-            >
-             
-            </p>
+           
             <div id="result-div" style="display: none; margin-top: 20px">
               <h1>Kết quả dự đoán</h1>
               <p id="output"></p><br>
@@ -102,9 +91,25 @@
 
             </div>
           </div>
-    </div>
-    <!-- End Hero -->
 
+        
+          </div>
+    <!-- End Hero -->
+    <div class="alert-box">
+      <p id="alert-box-msg"></p>
+
+      <button class="exit-button" onclick="closeAlertBox()">Close</button>
+
+    </div>
+
+    <div class="continue-box">
+      <p id="continue-box-msg"></p>
+
+      <button class="exit-button" onclick="closeContinueBox()">Close</button>
+
+    </div>
+   <div class="overlay-screen">
+</div>
     <div id="main">
    
 
@@ -141,6 +146,8 @@
   document.getElementById('image-container').appendChild(overlay); // Append overlay to the image container
 
   document.getElementById('file-input').addEventListener('change', function(event) {
+    document.getElementById('result-div').style.display = 'none';
+
           var file = event.target.files[0];
           if (file) {
             var reader = new FileReader();
@@ -149,7 +156,6 @@
               isBoxConfirmed = false;
               croppedFile = null;
               drawSelectionButton.style.display = 'block';
-              confirmButton.style.display = 'block';
             };
             reader.readAsDataURL(file);
           }
@@ -187,10 +193,11 @@
 
   function endSelection() {
     isSelecting = false;
-    confirmButton.style.display = 'block';
     img.removeEventListener('mousedown', startSelection);
     img.removeEventListener('mousemove', moveSelection);
     img.removeEventListener('mouseup', endSelection);
+    confirmButton.style.display = 'block';
+
   }
 
   confirmButton.addEventListener('click', function() {
@@ -226,13 +233,24 @@
       const croppedImageUrl = URL.createObjectURL(blob);
       img.src = croppedImageUrl;
     }, 'image/jpeg');
+    document.querySelector('.continue-box').style.display = 'block';
 
-    alert('Đã crop phần ảnh trong hình vuông, hãy upload để phát hiện deepfake trong khu vực đó ');
-
+    document.querySelector('#continue-box-msg').textContent = 'Đã crop phần ảnh bạn chọn, hãy upload để phát hiện deepfake trong khu vực đó';
+    document.querySelector('.overlay-screen').classList.add('show');
     // Hide the confirm button and overlay
     confirmButton.style.display = 'none';
     overlay.style.display = 'none';
   });
+
+  function closeAlertBox() {
+    document.querySelector('.alert-box').style.display = 'none';
+    document.querySelector('.overlay-screen').classList.remove('show');
+    window.location.reload();
+}
+  function closeContinueBox() {
+    document.querySelector('.continue-box').style.display = 'none';
+    document.querySelector('.overlay-screen').classList.remove('show');
+}
 
   document.getElementById('upload-form').addEventListener('submit', function(event) {
     event.preventDefault();
@@ -301,11 +319,19 @@
           window.URL.revokeObjectURL(url);
         };
       } else {
-        alert('File upload failed');
+        document.querySelector('#alert-box-msg').textContent = 'File upload failed';
       }
     })
     .catch(error => {
-      alert(error)
+     //add error message inside <p> 
+      console.log('error', error);
+      document.querySelector('.overlay-screen').classList.add('show');
+    document.querySelector('.alert-box').style.display = 'block';
+
+      document.querySelector('#alert-box-msg').textContent = error;
+
+      
+      
     })
     .finally(() => {
       // Hide the spinner
@@ -379,6 +405,9 @@
 </div>
 </div>
 </div>
+
 </div>
+
+
   </body>
 </html>
