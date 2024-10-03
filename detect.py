@@ -5,11 +5,13 @@ import pickle
 import cv2
 from tensorflow.keras.applications import DenseNet121
 import tensorflow as tf
+import time
 
 class NoFaceDetectedException(Exception):
     pass
 
 def detect(imgpath):
+    start_time = time.time()
     print(imgpath)
   
     # Load file trọng số đã đào tạo trên Google Colab
@@ -42,7 +44,12 @@ def detect(imgpath):
     # Calculating the probability
     probab = float(round(predictions[0][np.argmax(predictions[0])]*100, 2))
 
-    return {"label": label, "probability": probab}
+    detection_time = time.time() - start_time
+
+    return {"label": label,
+     "probability": probab,
+    "detection_time": detection_time,
+    }
 
 if __name__ == '__main__':
     detect()

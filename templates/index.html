@@ -88,7 +88,7 @@
               <h1>Kết quả dự đoán</h1>
               <p id="output"></p><br>
               <p id="percent"></p>
-
+              <canvas id="detection-chart" width="400" height="200"></canvas>
             </div>
           </div>
 
@@ -112,6 +112,7 @@
 </div>
     <div id="main">
    
+      <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
       <!-- Vendor JS Files -->
       <script src="assets/vendor/jquery/jquery.min.js"></script>
@@ -128,6 +129,8 @@
       ></script>
       
       <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/0.4.1/html2canvas.min.js"></script>
+
+
 <script>
   let isSelecting = false;
   let startX, startY, endX, endY;
@@ -252,6 +255,9 @@
     document.querySelector('.overlay-screen').classList.remove('show');
 }
 
+let chartInstance = null;
+let detectionResults = [];
+
   document.getElementById('upload-form').addEventListener('submit', function(event) {
     event.preventDefault();
     var formData = new FormData();
@@ -299,31 +305,99 @@
         } else {
           document.getElementById('output').textContent = "Ảnh fake";
         }
-        document.getElementById('percent').textContent = "Xác suất: "+ data.percent+" %";
-
         document.getElementById('result-div').style.display = 'block';
-        document.getElementById('download-report').style.display = 'block';
-        document.getElementById('download-report').onclick = async function () {
-          const reportResponse = await fetch('/download_report', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(data),
-          });
-          const blob = await reportResponse.blob();
-          const url = window.URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.style.display = 'none';
-          a.href = url;
-          a.download = 'report.pdf';
-          document.body.appendChild(a);
-          a.click();
-          window.URL.revokeObjectURL(url);
-        };
+
+        // Store the result
+        detectionResults.push({
+          label: `Detection ${detectionResults.length + 1}`,
+          result: data.label,
+          percent: data.percent,
+          duration: data.duration,
+        });
+
+
+        // Destroy the existing chart instance if it exists
+        if (chartInstance) {
+          chartInstance.destroy();
+        }
+
+        // document.getElementById('download-report').style.display = 'block';
+        // document.getElementById('download-report').onclick = async function () {
+        //   const reportResponse = await fetch('/download_report', {
+        //     method: 'POST',
+        //     headers: {
+        //       'Content-Type': 'application/json',
+        //     },
+        //     body: JSON.stringify(data),
+        //   });
+        //   const blob = await reportResponse.blob();
+        //   const url = window.URL.createObjectURL(blob);
+        //   const a = document.createElement('a');
+        //   a.style.display = 'none';
+        //   a.href = url;
+        //   a.download = 'report.pdf';
+        //   document.body.appendChild(a);
+        //   a.click();
+        //   window.URL.revokeObjectURL(url);
+        // };
       } else {
         document.querySelector('#alert-box-msg').textContent = 'File upload failed';
       }
+
+      // Render the chart with all results
+    var ctx = document.getElementById('detection-chart').getContext('2d');
+    chartInstance = new Chart(ctx, {
+      type: 'bar',
+      data: {
+       
+        labels: detectionResults.map(result => result.label),
+        datasets: [
+        
+        {
+          label: 'Xác suất (%)',
+          data: detectionResults.map(result => result.percent),
+          backgroundColor: 'rgba(7, 249, 91, 0.96)',
+          borderColor: 'rgba(75, 192, 192, 1)',
+          borderWidth: 1,
+          yAxisID: 'y'
+        },
+        {
+          label: 'Thời gian phát hiện (s)',
+          data: detectionResults.map(result => result.duration),
+          backgroundColor: 'rgba(248, 0, 0, 0.8)',
+          borderColor: 'rgba(0, 0, 0, 0.96)',
+          borderWidth: 1,
+          yAxisID: 'y1'
+        }
+      ]
+      },
+      options: {
+        scales: {
+          y: {
+            beginAtZero: true,
+            max: 100,
+            position: 'left',
+            title: {
+              display: true,
+              text: 'Xác suất (%)'
+            }
+          },
+          y1: {
+            beginAtZero: true,
+            max: 5,
+            position: 'right',
+            title: {
+              display: true,
+              text: 'Thời gian phát hiện (s)'
+            },
+            grid: {
+              drawOnChartArea: false // only want the grid lines for one axis to show up
+            }
+          }
+        }
+      }
+    });
+
     })
     .catch(error => {
      //add error message inside <p> 
