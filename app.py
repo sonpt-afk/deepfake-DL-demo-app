@@ -95,7 +95,7 @@ def upload_with_box():
         try:
             # Call the detect function and get the result
             result = detect(file_path)
-            return jsonify({'file_url': url_for('upload', filename=filename, _external=True), 'label': result['label'], 'percent': result['probability']})
+            return jsonify({'file_url': url_for('upload', filename=filename, _external=True), 'label': result['label'], 'percent': result['probability'], 'duration': result['detection_time']})
         except NoFaceDetectedException as e:
             abort(422)  # Unprocessable Entity
     return jsonify({'error': 'No file uploaded'}), 400
