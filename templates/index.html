@@ -89,6 +89,10 @@
               <p id="output"></p><br>
               <p id="percent"></p>
               <canvas id="detection-chart" width="400" height="200"></canvas>
+              <h2 id="chart-info" style="display: none;">
+                Thống kê kết quả phân tích
+              </h2>
+
             </div>
           </div>
 
@@ -397,6 +401,9 @@ let detectionResults = [];
         }
       }
     });
+
+      // Show the additional information below the chart
+    document.getElementById('chart-info').style.display = 'block';
 
     })
     .catch(error => {
