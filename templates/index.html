@@ -171,6 +171,8 @@
     img.addEventListener('mousedown', startSelection);
     img.addEventListener('mousemove', moveSelection);
     img.addEventListener('mouseup', endSelection);
+    document.addEventListener('keydown', handleKeyDown);
+
   });
 
   function startSelection(e) {
@@ -203,9 +205,17 @@
     img.removeEventListener('mousedown', startSelection);
     img.removeEventListener('mousemove', moveSelection);
     img.removeEventListener('mouseup', endSelection);
+    document.removeEventListener('keydown', handleKeyDown);
+
     confirmButton.style.display = 'block';
 
   }
+
+  function handleKeyDown(e) {
+  if (e.key === 'Enter') {
+    endSelection();
+  }
+}
 
   confirmButton.addEventListener('click', function() {
     const rect = img.getBoundingClientRect();
