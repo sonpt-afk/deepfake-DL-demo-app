@@ -100,6 +100,24 @@ def upload_with_box():
             abort(422)  # Unprocessable Entity
     return jsonify({'error': 'No file uploaded'}), 400
 
+feedback_data = []
+
+@app.route('/feedback', methods=['POST'])
+def feedback():
+    data = request.get_json()
+    feedback_data.append(data)
+    return jsonify({'status': 'success', 'data': data})
+
+@app.route('/feedback_summary', methods=['GET'])
+def feedback_summary():
+    total_count = len(feedback_data)
+    correct_count = sum(1 for feedback in feedback_data if feedback['correct'])
+    if total_count > 0:
+        correct_rate = (correct_count / total_count) * 100
+    else:
+        correct_rate = 0
+    return jsonify({'correct_rate': correct_rate, 'total_count': total_count})
+
 @app.errorhandler(413)
 def request_entity_too_large(error):
     return jsonify({'message': 'Kích thước file quá lớn, vui lòng upload file < 5MB'}), 413

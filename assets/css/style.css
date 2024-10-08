@@ -502,6 +502,54 @@ h6 {
   transform: translate(40%);
 }
 
+#feedback {
+  width: 80%;
+  height: auto;
+  border: 1px solid #000;
+  padding: 20px;
+  text-align: center;
+  background: #000;
+  color: #fff;
+  border-radius: 20px;
+}
+
+.fb-buttons {
+  display: flex;
+  width: 100%;
+  justify-content: space-around;
+}
+.fb-btn {
+  width: 40px;
+  height: 40px;
+  border: 1px solid #000;
+  border-radius: 10px;
+  cursor: pointer;
+  background: #fff;
+  /* color: #000 !important; */
+}
+
+#feedback-summary {
+  width: 400px;
+  border: 1px solid;
+  padding: 20px;
+  border-radius: 16px;
+  background: #000;
+  color: #fff;
+  text-align: center;
+  font-weight: 800;
+  margin-top: 80px;
+}
+
+#feedback-summary-header {
+  color: #fff !important;
+  font-size: 35px;
+}
+#thumb-up {
+  background: rgb(0, 132, 255);
+}
+#thumb-down {
+  background: red;
+}
 .exit-button {
   position: absolute;
   bottom: 10px;
