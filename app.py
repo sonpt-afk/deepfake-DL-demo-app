@@ -8,6 +8,9 @@ import uuid
 import io
 from reportlab.lib.pagesizes import letter  # Import letter
 from reportlab.pdfgen import canvas  # Import canvas
+import logging
+
+logging.basicConfig(level=logging.DEBUG)
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
@@ -106,6 +109,8 @@ feedback_data = []
 def feedback():
     data = request.get_json()
     feedback_data.append(data)
+    logging.debug(f"Feedback received: {data}")
+    logging.debug(f"Total feedback count: {len(feedback_data)}")
     return jsonify({'status': 'success', 'data': data})
 
 @app.route('/feedback_summary', methods=['GET'])
@@ -116,6 +121,7 @@ def feedback_summary():
         correct_rate = (correct_count / total_count) * 100
     else:
         correct_rate = 0
+        logging.debug(f"Correct feedback count: {correct_count}")
     return jsonify({'correct_rate': correct_rate, 'total_count': total_count})
 
 @app.errorhandler(413)

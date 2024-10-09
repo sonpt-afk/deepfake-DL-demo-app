@@ -30,6 +30,34 @@ body {
   display: flex;
 }
 
+#file-input::file-selector-button {
+  background-color: #000; /* Green background */
+  color: white; /* White text */
+  padding: 10px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: 800;
+}
+
+#file-input::file-selector-button:hover {
+  background-color: red; /* Green background */
+  color: #fff; /* White text */
+}
+
+input[type="submit"] {
+  background-color: blue; /* Blue background */
+  color: white; /* White text */
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: 800;
+
+}
+
+
+
 .row {
   width: 70%;
 }

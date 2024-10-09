@@ -154,28 +154,26 @@
       <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/0.4.1/html2canvas.min.js"></script>
 
 
-<script>
- 
-
-  let isSelecting = false;
-  let startX, startY, endX, endY;
-  let isBoxConfirmed = false;
-  let croppedFile = null;
-
-  const img = document.getElementById('image-output');
-  const drawSelectionButton = document.getElementById('draw-selection');
-  const confirmButton = document.getElementById('confirm-selection');
-  const uploadButton = document.querySelector('#upload-form input[type="submit"]'); // Use the upload button inside the form
-  const overlay = document.createElement('div');
-  overlay.style.position = 'absolute';
-  overlay.style.background = 'rgba(255, 255, 255, 0.5)';
-  overlay.style.border = '2px dashed red';
-  overlay.style.display = 'none';
-  document.getElementById('image-container').appendChild(overlay); // Append overlay to the image container
-
-  document.getElementById('file-input').addEventListener('change', function(event) {
-    document.getElementById('result-div').style.display = 'none';
-
+      <script>
+        let isSelecting = false;
+        let startX, startY, endX, endY;
+        let isBoxConfirmed = false;
+        let croppedFile = null;
+      
+        const img = document.getElementById('image-output');
+        const drawSelectionButton = document.getElementById('draw-selection');
+        const confirmButton = document.getElementById('confirm-selection');
+        const uploadButton = document.querySelector('#upload-form input[type="submit"]'); // Use the upload button inside the form
+        const overlay = document.createElement('div');
+        overlay.style.position = 'absolute';
+        overlay.style.background = 'rgba(255, 255, 255, 0.5)';
+        overlay.style.border = '2px dashed red';
+        overlay.style.display = 'none';
+        document.getElementById('image-container').appendChild(overlay); // Append overlay to the image container
+      
+        document.getElementById('file-input').addEventListener('change', function(event) {
+          document.getElementById('result-div').style.display = 'none';
+      
           var file = event.target.files[0];
           if (file) {
             var reader = new FileReader();
@@ -188,307 +186,290 @@
             reader.readAsDataURL(file);
           }
         });
-  drawSelectionButton.addEventListener('click', function() {
-    img.addEventListener('mousedown', startSelection);
-    img.addEventListener('mousemove', moveSelection);
-    img.addEventListener('mouseup', endSelection);
-    document.addEventListener('keydown', handleKeyDown);
-
-  });
-
-  function startSelection(e) {
-    isSelecting = true;
-    const rect = img.getBoundingClientRect();
-    startX = e.clientX - rect.left;
-    startY = e.clientY - rect.top;
-    overlay.style.left = startX + 'px';
-    overlay.style.top = startY + 'px';
-    overlay.style.width = '0px';
-    overlay.style.height = '0px';
-    overlay.style.display = 'block';
-    confirmButton.style.display = 'none';
-  }
-
-  function moveSelection(e) {
-    if (isSelecting) {
-      const rect = img.getBoundingClientRect();
-      endX = e.clientX - rect.left;
-      endY = e.clientY - rect.top;
-      overlay.style.width = Math.abs(endX - startX) + 'px';
-      overlay.style.height = Math.abs(endY - startY) + 'px';
-      overlay.style.left = Math.min(startX, endX) + 'px';
-      overlay.style.top = Math.min(startY, endY) + 'px';
-    }
-  }
-
-  function endSelection() {
-    isSelecting = false;
-    img.removeEventListener('mousedown', startSelection);
-    img.removeEventListener('mousemove', moveSelection);
-    img.removeEventListener('mouseup', endSelection);
-    document.removeEventListener('keydown', handleKeyDown);
-
-    confirmButton.style.display = 'block';
-
-  }
-
-  function handleKeyDown(e) {
-  if (e.key === 'Enter') {
-    endSelection();
-  }
-}
-
-  confirmButton.addEventListener('click', function() {
-    const rect = img.getBoundingClientRect();
-    const scaleX = img.naturalWidth / rect.width;
-    const scaleY = img.naturalHeight / rect.height;
-
-    const cropX = Math.min(startX, endX) * scaleX;
-    const cropY = Math.min(startY, endY) * scaleY;
-    const cropWidth = Math.abs(endX - startX) * scaleX;
-    const cropHeight = Math.abs(endY - startY) * scaleY;
-
-    console.log('Cropped part metadata:', {
-      cropX,
-      cropY,
-      cropWidth,
-      cropHeight
-    });
-
-    const croppedCanvas = document.createElement('canvas');
-    croppedCanvas.width = cropWidth;
-    croppedCanvas.height = cropHeight;
-    const ctx = croppedCanvas.getContext('2d');
-
-    ctx.drawImage(img, cropX, cropY, cropWidth, cropHeight, 0, 0, cropWidth, cropHeight);
-    croppedCanvas.toBlob(function(blob) {
-      croppedFile = new File([blob], 'cropped_image.jpg', { type: 'image/jpeg' });
-      console.log('Cropped image prepared:', croppedFile);
-      isBoxConfirmed = true;
-      uploadButton.style.display = 'block';
-
-      // Display the cropped image in the img element
-      const croppedImageUrl = URL.createObjectURL(blob);
-      img.src = croppedImageUrl;
-    }, 'image/jpeg');
-    document.querySelector('.continue-box').style.display = 'block';
-
-    document.querySelector('#continue-box-msg').textContent = 'Đã crop phần ảnh bạn chọn, hãy upload để phát hiện deepfake trong khu vực đó';
-    document.querySelector('.overlay-screen').classList.add('show');
-    // Hide the confirm button and overlay
-    confirmButton.style.display = 'none';
-    overlay.style.display = 'none';
-  });
-
-  function closeAlertBox() {
-    document.querySelector('.alert-box').style.display = 'none';
-    document.querySelector('.overlay-screen').classList.remove('show');
-    window.location.reload();
-}
-  function closeContinueBox() {
-    document.querySelector('.continue-box').style.display = 'none';
-    document.querySelector('.overlay-screen').classList.remove('show');
-}
-
-let chartInstance = null;
-let detectionResults = [];
-
-  document.getElementById('upload-form').addEventListener('submit', function(event) {
-    event.preventDefault();
-    var formData = new FormData();
-    var fileInput = document.getElementById('file-input');
-
-    if (isBoxConfirmed && croppedFile) {
-      formData.append('file', croppedFile);
-      uploadEndpoint = '/upload_with_box';
-    } else {
-      formData.append('file', fileInput.files[0]);
-      uploadEndpoint = '/';
-    }
-
-    // Show the spinner
-    document.getElementById('loading-spinner').style.display = 'block';
-    document.getElementById('loading-text').style.display = 'block';
-
-    function updateFeedbackSummary() {
-  fetch('/feedback_summary')
-    .then(response => response.json())
-    .then(data => {
-      document.getElementById('correct-rate').textContent = `Correct Prediction Rate: ${data.correct_rate.toFixed(2)}%`;
-      document.getElementById('total-count').textContent = `Total Predictions: ${data.total_count}`;
-      document.getElementById('feedback-summary').style.display = 'block';
-    })
-    .catch(error => console.error('Error fetching feedback summary:', error));
-}
-
-    function sendFeedback(fileUrl, isCorrect) {
-      console.log('ok');
-  fetch('/feedback', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      file_url: fileUrl,
-      correct: isCorrect
-    })
-  })
-  .then(response => response.json())
-  .then(data => {
-    console.log('Feedback recorded:', data);
-    // Hide feedback options after recording feedback
-    document.getElementById('feedback').style.display = 'none';
-    // Update feedback summary
-    updateFeedbackSummary();
-  })
-  .catch(error => {
-    console.error('Error recording feedback:', error);
-  });
-
-  document.addEventListener('DOMContentLoaded', function() {
-  updateFeedbackSummary();
-});
-}
-
-    fetch(uploadEndpoint, {
-      method: 'POST',
-      body: formData
-    })
-    .then(response => {
-      if (!response.ok) {
-        if (response.status === 413) {
-          throw new Error('Kích thước file quá lớn, vui lòng upload file nhỏ hơn 5MB');
-        }
-        else if(response.status === 415){
-          throw new Error('Định dạng file không được hỗ trợ, vui lòng upload file jpg/png/jpeg');
-        }
-        else if(response.status === 422){
-          throw new Error('Không có khuôn mặt nào trong ảnh, hãy thử ảnh khác nhé');
-        }
-        else {
-          throw new Error('An error occurred while uploading the file');
-        }
-      }
-      return response.json();
-    })
-    .then(data => {
-      if (data.file_url) {
-        console.log('Uploaded image metadata:', data);
-        img.src = data.file_url; // Update the src attribute
-        if(data.label.includes("real")) {
-          document.getElementById('output').textContent = "Ảnh thật";
-        } else {
-          document.getElementById('output').textContent = "Ảnh fake";
-        }
-        document.getElementById('result-div').style.display = 'block';
-
-         // Show feedback options
-      document.getElementById('feedback').style.display = 'block';
-
-// Handle feedback
-document.getElementById('thumb-up').addEventListener('click', function() {
-  sendFeedback(data.file_url, true);
-});
-
-document.getElementById('thumb-down').addEventListener('click', function() {
-  sendFeedback(data.file_url, false);
-});
-
-        // Store the result
-        detectionResults.push({
-          label: `Detection ${detectionResults.length + 1}`,
-          result: data.label,
-          percent: data.percent,
-          duration: data.duration,
-        });
-
-
-        // Destroy the existing chart instance if it exists
-        if (chartInstance) {
-          chartInstance.destroy();
-        }
-
       
-      } else {
-        document.querySelector('#alert-box-msg').textContent = 'File upload failed';
-      }
-
-      // Render the chart with all results
-    var ctx = document.getElementById('detection-chart').getContext('2d');
-    chartInstance = new Chart(ctx, {
-      type: 'bar',
-      data: {
-       
-        labels: detectionResults.map(result => result.label),
-        datasets: [
-        
-        {
-          label: 'Xác suất (%)',
-          data: detectionResults.map(result => result.percent),
-          backgroundColor: 'rgba(7, 249, 91, 0.96)',
-          borderColor: 'rgba(75, 192, 192, 1)',
-          borderWidth: 1,
-          yAxisID: 'y'
-        },
-        {
-          label: 'Thời gian phát hiện (s)',
-          data: detectionResults.map(result => result.duration),
-          backgroundColor: 'rgba(248, 0, 0, 0.8)',
-          borderColor: 'rgba(0, 0, 0, 0.96)',
-          borderWidth: 1,
-          yAxisID: 'y1'
+        drawSelectionButton.addEventListener('click', function() {
+          img.addEventListener('mousedown', startSelection);
+          img.addEventListener('mousemove', moveSelection);
+          img.addEventListener('mouseup', endSelection);
+          document.addEventListener('keydown', handleKeyDown);
+        });
+      
+        function startSelection(e) {
+          isSelecting = true;
+          const rect = img.getBoundingClientRect();
+          startX = e.clientX - rect.left;
+          startY = e.clientY - rect.top;
+          overlay.style.left = startX + 'px';
+          overlay.style.top = startY + 'px';
+          overlay.style.width = '0px';
+          overlay.style.height = '0px';
+          overlay.style.display = 'block';
+          confirmButton.style.display = 'none';
         }
-      ]
-      },
-      options: {
-        scales: {
-          y: {
-            beginAtZero: true,
-            max: 100,
-            position: 'left',
-            title: {
-              display: true,
-              text: 'Xác suất (%)'
-            }
-          },
-          y1: {
-            beginAtZero: true,
-            max: 10,
-            position: 'right',
-            title: {
-              display: true,
-              text: 'Thời gian phát hiện (s)'
-            },
-            grid: {
-              drawOnChartArea: false // only want the grid lines for one axis to show up
-            }
+      
+        function moveSelection(e) {
+          if (isSelecting) {
+            const rect = img.getBoundingClientRect();
+            endX = e.clientX - rect.left;
+            endY = e.clientY - rect.top;
+            overlay.style.width = Math.abs(endX - startX) + 'px';
+            overlay.style.height = Math.abs(endY - startY) + 'px';
+            overlay.style.left = Math.min(startX, endX) + 'px';
+            overlay.style.top = Math.min(startY, endY) + 'px';
           }
         }
-      }
-    });
-
-      // Show the additional information below the chart
-    document.getElementById('chart-info').style.display = 'block';
-
-    })
-    .catch(error => {
-     //add error message inside <p> 
-      console.log('error', error);
-      document.querySelector('.overlay-screen').classList.add('show');
-    document.querySelector('.alert-box').style.display = 'block';
-
-      document.querySelector('#alert-box-msg').textContent = error;
-
       
+        function endSelection() {
+          isSelecting = false;
+          img.removeEventListener('mousedown', startSelection);
+          img.removeEventListener('mousemove', moveSelection);
+          img.removeEventListener('mouseup', endSelection);
+          document.removeEventListener('keydown', handleKeyDown);
       
-    })
-    .finally(() => {
-      // Hide the spinner
-      document.getElementById('loading-spinner').style.display = 'none';
-      document.getElementById('loading-text').style.display = 'none';
-    });
-  });
-</script>
+          confirmButton.style.display = 'block';
+        }
+      
+        function handleKeyDown(e) {
+          if (e.key === 'Enter') {
+            endSelection();
+          }
+        }
+      
+        confirmButton.addEventListener('click', function() {
+          const rect = img.getBoundingClientRect();
+          const scaleX = img.naturalWidth / rect.width;
+          const scaleY = img.naturalHeight / rect.height;
+      
+          const cropX = Math.min(startX, endX) * scaleX;
+          const cropY = Math.min(startY, endY) * scaleY;
+          const cropWidth = Math.abs(endX - startX) * scaleX;
+          const cropHeight = Math.abs(endY - startY) * scaleY;
+      
+          console.log('Cropped part metadata:', {
+            cropX,
+            cropY,
+            cropWidth,
+            cropHeight
+          });
+      
+          const croppedCanvas = document.createElement('canvas');
+          croppedCanvas.width = cropWidth;
+          croppedCanvas.height = cropHeight;
+          const ctx = croppedCanvas.getContext('2d');
+      
+          ctx.drawImage(img, cropX, cropY, cropWidth, cropHeight, 0, 0, cropWidth, cropHeight);
+          croppedCanvas.toBlob(function(blob) {
+            croppedFile = new File([blob], 'cropped_image.jpg', { type: 'image/jpeg' });
+            console.log('Cropped image prepared:', croppedFile);
+            isBoxConfirmed = true;
+            uploadButton.style.display = 'block';
+      
+            // Display the cropped image in the img element
+            const croppedImageUrl = URL.createObjectURL(blob);
+            img.src = croppedImageUrl;
+          }, 'image/jpeg');
+          document.querySelector('.continue-box').style.display = 'block';
+      
+          document.querySelector('#continue-box-msg').textContent = 'Đã crop phần ảnh bạn chọn, hãy upload để phát hiện deepfake trong khu vực đó';
+          document.querySelector('.overlay-screen').classList.add('show');
+          // Hide the confirm button and overlay
+          confirmButton.style.display = 'none';
+          overlay.style.display = 'none';
+        });
+      
+        function closeAlertBox() {
+          document.querySelector('.alert-box').style.display = 'none';
+          document.querySelector('.overlay-screen').classList.remove('show');
+          window.location.reload();
+        }
+      
+        function closeContinueBox() {
+          document.querySelector('.continue-box').style.display = 'none';
+          document.querySelector('.overlay-screen').classList.remove('show');
+        }
+      
+        let chartInstance = null;
+        let detectionResults = [];
+      
+        document.getElementById('upload-form').addEventListener('submit', function(event) {
+          event.preventDefault();
+          var formData = new FormData();
+          var fileInput = document.getElementById('file-input');
+      
+          let uploadEndpoint = '/';
+          if (isBoxConfirmed && croppedFile) {
+            formData.append('file', croppedFile);
+            uploadEndpoint = '/upload_with_box';
+          } else {
+            formData.append('file', fileInput.files[0]);
+          }
+      
+          // Show the spinner
+          document.getElementById('loading-spinner').style.display = 'block';
+          document.getElementById('loading-text').style.display = 'block';
+      
+          fetch(uploadEndpoint, {
+            method: 'POST',
+            body: formData
+          })
+          .then(response => {
+            if (!response.ok) {
+              if (response.status === 413) {
+                throw new Error('Kích thước file quá lớn, vui lòng upload file nhỏ hơn 5MB');
+              } else if (response.status === 415) {
+                throw new Error('Định dạng file không được hỗ trợ, vui lòng upload file jpg/png/jpeg');
+              } else if (response.status === 422) {
+                throw new Error('Không có khuôn mặt nào trong ảnh, hãy thử ảnh khác nhé');
+              } else {
+                throw new Error('An error occurred while uploading the file');
+              }
+            }
+            return response.json();
+          })
+          .then(data => {
+            if (data.file_url) {
+              img.src = data.file_url; // Update the src attribute
+              if (data.label.includes("real")) {
+                document.getElementById('output').textContent = "Ảnh thật";
+              } else {
+                document.getElementById('output').textContent = "Ảnh fake";
+              }
+              document.getElementById('result-div').style.display = 'block';
+      
+              // Show feedback options
+              document.getElementById('feedback').style.display = 'block';
+      
+              // Store the result
+              detectionResults.push({
+                label: `Detection ${detectionResults.length + 1}`,
+                result: data.label,
+                percent: data.percent,
+                duration: data.duration,
+              });
+      
+              // Destroy the existing chart instance if it exists
+              if (chartInstance) {
+                chartInstance.destroy();
+              }
+      
+              // Render the chart with all results
+              var ctx = document.getElementById('detection-chart').getContext('2d');
+              chartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                  labels: detectionResults.map(result => result.label),
+                  datasets: [
+                    {
+                      label: 'Xác suất (%)',
+                      data: detectionResults.map(result => result.percent),
+                      backgroundColor: 'rgba(7, 249, 91, 0.96)',
+                      borderColor: 'rgba(75, 192, 192, 1)',
+                      borderWidth: 1,
+                      yAxisID: 'y'
+                    },
+                    {
+                      label: 'Thời gian phát hiện (s)',
+                      data: detectionResults.map(result => result.duration),
+                      backgroundColor: 'rgba(248, 0, 0, 0.8)',
+                      borderColor: 'rgba(0, 0, 0, 0.96)',
+                      borderWidth: 1,
+                      yAxisID: 'y1'
+                    }
+                  ]
+                },
+                options: {
+                  scales: {
+                    y: {
+                      beginAtZero: true,
+                      max: 100,
+                      position: 'left',
+                      title: {
+                        display: true,
+                        text: 'Xác suất (%)'
+                      }
+                    },
+                    y1: {
+                      beginAtZero: true,
+                      max: 10,
+                      position: 'right',
+                      title: {
+                        display: true,
+                        text: 'Thời gian phát hiện (s)'
+                      },
+                      grid: {
+                        drawOnChartArea: false // only want the grid lines for one axis to show up
+                      }
+                    }
+                  }
+                }
+              });
+      
+              // Show the additional information below the chart
+              document.getElementById('chart-info').style.display = 'block';
+            } else {
+              document.querySelector('#alert-box-msg').textContent = 'File upload failed';
+            }
+          })
+          .catch(error => {
+            console.log('error', error);
+            document.querySelector('.overlay-screen').classList.add('show');
+            document.querySelector('.alert-box').style.display = 'block';
+            document.querySelector('#alert-box-msg').textContent = error;
+          })
+          .finally(() => {
+            // Hide the spinner
+            document.getElementById('loading-spinner').style.display = 'none';
+            document.getElementById('loading-text').style.display = 'none';
+          });
+        });
+      
+        document.addEventListener('DOMContentLoaded', function() {
+          updateFeedbackSummary();
+      
+          // Handle feedback
+          document.getElementById('thumb-up').addEventListener('click', function() {
+            sendFeedback(img.src, true);
+          });
+      
+          document.getElementById('thumb-down').addEventListener('click', function() {
+            sendFeedback(img.src, false);
+          });
+        });
+      
+        function updateFeedbackSummary() {
+          fetch('/feedback_summary')
+            .then(response => response.json())
+            .then(data => {
+              document.getElementById('correct-rate').textContent = `Correct Prediction Rate: ${data.correct_rate.toFixed(2)}%`;
+              document.getElementById('total-count').textContent = `Total Predictions: ${data.total_count}`;
+              document.getElementById('feedback-summary').style.display = 'block';
+            })
+            .catch(error => console.error('Error fetching feedback summary:', error));
+        }
+      
+        function sendFeedback(fileUrl, isCorrect) {
+          fetch('/feedback', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              file_url: fileUrl,
+              correct: isCorrect
+            })
+          })
+          .then(response => response.json())
+          .then(data => {
+            // Hide feedback options after recording feedback
+            document.getElementById('feedback').style.display = 'none';
+            // Update feedback summary
+            updateFeedbackSummary();
+          })
+          .catch(error => {
+            console.error('Error recording feedback:', error);
+          });
+        }
+      </script>
 
     </strong>
     <nav class="mobile-nav d-lg-none">
