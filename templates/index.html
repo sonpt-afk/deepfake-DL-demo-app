@@ -327,6 +327,7 @@
             return response.json();
           })
           .then(data => {
+            console.log('data detect:', data);
             if (data.file_url) {
               img.src = data.file_url; // Update the src attribute
               if (data.label.includes("real")) {
