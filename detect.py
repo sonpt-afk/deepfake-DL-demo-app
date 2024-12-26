@@ -16,7 +16,7 @@ def detect(imgpath):
   
     # Load file trọng số đã đào tạo trên Google Colab
     model = tf.keras.models.load_model('./fakevsreal_weights.keras')
-    # Load nhãn đã được mã hoá (Label Encoder)
+  
     labels = ['real', 'fake']
 
     image = cv2.imread(imgpath)
@@ -37,9 +37,10 @@ def detect(imgpath):
     
     # Predicting the label
     predictions = model.predict(image)
-    
+    print("predictions",predictions)
     # Extracting the label with maximum probability
     label = labels[np.argmax(predictions[0])]
+    print("label",label)
     
     # Calculating the probability
     probab = float(round(predictions[0][np.argmax(predictions[0])]*100, 2))
