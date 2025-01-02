@@ -8,10 +8,12 @@ import uuid
 import io
 from reportlab.lib.pagesizes import letter  # Import letter
 from reportlab.pdfgen import canvas  # Import canvas
+port = int(os.environ.get("PORT", 10000))
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
-
+if __name__ == "__main__":
+    app.run(host='0.0.0.0', port=port)
 app.config['MAX_CONTENT_LENGTH'] = 5 * 1024 * 1024
 app.config['UPLOAD_EXTENSIONS'] = ['.jpg', '.png', '.jpeg']
 app.config['UPLOAD_PATH'] = './uploads'
