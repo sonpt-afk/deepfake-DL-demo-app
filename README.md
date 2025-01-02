@@ -1,7 +1,8 @@
 # Hướng dẫn cài đặt và sử dụng ứng dụng
 
 ## Giới thiệu
-Đây là một ứng dụng web để phát hiện khuôn mặt trong ảnh và cung cấp phản hồi về độ chính xác của việc phát hiện. Ứng dụng này sử dụng các thư viện và công cụ như Flask, Chart.js, và Uppload.
+Đây là một ứng dụng web để phát hiện khuôn mặt trong ảnh và cung cấp phản hồi về độ chính xác của việc phát hiện. Ứng dụng này sử dụng các thư viện và công cụ như Flask, Chart.js.
+Link dataset để test chức năng detect trên web: https://www.kaggle.com/datasets/hamzaboulahia/hardfakevsrealfaces
 
 ## Cài đặt
 
